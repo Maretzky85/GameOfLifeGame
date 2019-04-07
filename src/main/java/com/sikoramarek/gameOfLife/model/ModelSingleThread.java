@@ -2,7 +2,12 @@ package com.sikoramarek.gameOfLife.model;
 
 import java.util.Arrays;
 
-public class BoardSingleThread implements BoardInterface {
+public class ModelSingleThread implements ModelInterface {
+
+	private boolean ready = false;
+
+	private final int X_SIZE;
+	private final int Y_SIZE;
 
 	private final Dot[][][] boards;
 	private int generation = 0;
@@ -16,12 +21,15 @@ public class BoardSingleThread implements BoardInterface {
 	private int currentBoardIndex = 0;
 	private int nextGenBoardIndex = 1;
 
-	public BoardSingleThread(int x_size, int y_size){
-		boards = new Dot[2][y_size][x_size];
+	public ModelSingleThread(int x_size, int y_size){
+		X_SIZE = x_size;
+		Y_SIZE = y_size;
+		boards = new Dot[2][Y_SIZE][X_SIZE];
+		ready = true;
 	}
 
 	@Override
-	public Dot[][] getCurrentBoardIndex() {
+	public Dot[][] getCurrentBoard() {
 
 		return boardsSwapped ? boards[1]:boards[0];
 	}
@@ -120,5 +128,28 @@ public class BoardSingleThread implements BoardInterface {
 			boards[currentBoardIndex][y][x] = null;
 		}
 		return true;
+	}
+
+	@Override
+	public boolean changeOnPositions(int[][] array) {
+		boolean success = false;
+		for (int i = 0; i < array.length; i++) {
+			if (changeOnPosition(array[i][0], array[i][1]))
+				success = true;
+		}
+		return success;
+	}
+
+	@Override
+	public boolean importBoard(Dot[][] board) {
+		if(board.length != Y_SIZE || board[0].length != X_SIZE){
+			return false;
+		}
+		boards[currentBoardIndex] = board;
+		return true;
+	}
+
+	public boolean getReadyStatus(){
+		return ready;
 	}
 }

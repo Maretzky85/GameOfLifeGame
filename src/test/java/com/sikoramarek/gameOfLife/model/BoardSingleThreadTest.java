@@ -6,26 +6,26 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class BoardSingleThreadTest {
-	private BoardSingleThread board;
-	private Dot[][] testArray = new Dot[10][10];
+	private ModelSingleThread board;
+	private Dot[][] testArray;
 
 	@Before
 	public void before(){
-		board = new BoardSingleThread(10,10);
+		board = new ModelSingleThread(10,10);
 		testArray = new Dot[10][10];
 	}
 
 	@Test
 	public void getCurrentBoard() {
-		assertArrayEquals(testArray, board.getCurrentBoardIndex());
+		assertArrayEquals(testArray, board.getCurrentBoard());
 		testArray[0][0] = Dot.ALIVE;
 		board.changeOnPosition(0,0);
-		assertArrayEquals(testArray, board.getCurrentBoardIndex());
+		assertArrayEquals(testArray, board.getCurrentBoard());
 	}
 
 	@Test
 	public void getNextGenerationBoard() {
-		assertArrayEquals(board.getCurrentBoardIndex(), board.getNextGenerationBoard());
+		assertArrayEquals(board.getCurrentBoard(), board.getNextGenerationBoard());
 		board.changeOnPosition(0,1);
 		board.changeOnPosition(1,1);
 		board.changeOnPosition(2,1);
@@ -48,12 +48,33 @@ public class BoardSingleThreadTest {
 
 	@Test
 	public void changeOnPosition() {
-		assertNull(board.getCurrentBoardIndex()[0][0]);
+		assertNull(board.getCurrentBoard()[0][0]);
 		assertTrue(board.changeOnPosition(0,0));
 		assertFalse(board.changeOnPosition(15,15));
 		assertFalse(board.changeOnPosition(-5,-5));
-		assertNotNull(board.getCurrentBoardIndex()[0][0]);
+		assertNotNull(board.getCurrentBoard()[0][0]);
 		assertTrue(board.changeOnPosition(0,0));
-		assertNull(board.getCurrentBoardIndex()[0][0]);
+		assertNull(board.getCurrentBoard()[0][0]);
+	}
+
+	@Test
+	public void changeOnPositionArray(){
+		assertNull(board.getCurrentBoard()[0][0]);
+		assertTrue(board.changeOnPositions(new int[][]{ {1,1},{1,2}, {1,3} }));
+		testArray[1][1] = Dot.ALIVE;
+		testArray[2][1] = Dot.ALIVE;
+		testArray[3][1] = Dot.ALIVE;
+		assertArrayEquals(testArray, board.getCurrentBoard());
+	}
+
+	@Test
+	public void importBoard(){
+		testArray[0][1] = Dot.ALIVE;
+		testArray[1][1] = Dot.ALIVE;
+		testArray[2][1] = Dot.ALIVE;
+		assertTrue(board.importBoard(testArray));
+		assertArrayEquals(testArray, board.getCurrentBoard());
+		assertFalse(board.importBoard(new Dot[0][0]));
+		assertFalse(board.importBoard(new Dot[50][50]));
 	}
 }
