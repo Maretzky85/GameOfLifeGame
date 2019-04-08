@@ -19,7 +19,7 @@ public class ResourceManager {
 
 	private static Stage stage;
 
-	private static FrameControlLoop loop;
+	private static TimingInterface loop;
 
 	private static ModelInterface board;
 
@@ -38,14 +38,14 @@ public class ResourceManager {
 
 	}
 
-	public FrameControlLoop getLoop() {
+	public TimingInterface getLoop() {
 		if (loop == null){
 			loop = new FrameControlLoop();
 		}
 		return loop;
 	}
 
-	public static FrameControlLoop getControlLoop(){
+	public static TimingInterface getTimingControl(){
 		if(loop == null){
 			loop = new FrameControlLoop();
 		}

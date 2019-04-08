@@ -6,7 +6,7 @@ package com.sikoramarek.gameOfLife.controller;
  * This is clock for theoretical model, that run selected functions in requested frequency
  */
 
-public class FrameControlLoop implements Runnable, TimingInterface{
+public class FrameControlLoop implements TimingInterface{
 
 	private int FRAME_RATE = 30;
 

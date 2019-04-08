@@ -1,6 +1,6 @@
 package com.sikoramarek.gameOfLife.controller;
 
-public interface TimingInterface {
+public interface TimingInterface extends Runnable{
 
 
 	/**
