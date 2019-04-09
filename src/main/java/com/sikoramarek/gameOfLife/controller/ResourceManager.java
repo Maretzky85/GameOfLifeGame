@@ -4,37 +4,57 @@ import com.sikoramarek.gameOfLife.common.Logger;
 import com.sikoramarek.gameOfLife.model.Model;
 import com.sikoramarek.gameOfLife.model.ModelSingleThread;
 import com.sikoramarek.gameOfLife.view.JavaFXView;
+import com.sikoramarek.gameOfLife.view.WindowedMenu;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 
 public class ResourceManager {
 
-	public ResourceManager(){
+	static ResourceManager instance;
 
+	private ResourceManager(){
 	}
 
-	ResourceManager(Stage primaryStage){
-		stage = primaryStage;
-	}
+	private Stage primaryStage;
 
-	private static Stage stage;
+	private Stage secondaryStage;
 
-	private static TimingInterface loop;
+	private TimingInterface loop;
 
-	private static Model board;
+	private Model board;
 
-	private static JavaFXView view;
+	private JavaFXView view;
+
+	private WindowedMenu menu;
 
 	private static int X_SIZE = 0;
+
 	private static int Y_SIZE = 0;
 
-	public static void loadResources() {
+
+	public static ResourceManager getInstance(){
+		if (instance == null){
+			instance = new ResourceManager();
+		}
+		return instance;
+	}
+
+	public void setPrimaryStage(Stage primaryStage){
+		this.primaryStage = primaryStage;
+	}
+
+	public void loadResources() {
 		loop = new FrameControlLoop();
 		view = new JavaFXView();
+		menu = new WindowedMenu();
+
 		Platform.runLater(() -> {
 			view.viewInit(X_SIZE, Y_SIZE);
-			stage.setScene(view.getScene());
-			stage.show();
+			primaryStage.setScene(view.getScene());
+			primaryStage.show();
+			secondaryStage = new Stage();
+			secondaryStage.setScene(menu.getMenu());
+			secondaryStage.show();
 		});
 
 	}
@@ -46,14 +66,14 @@ public class ResourceManager {
 		return loop;
 	}
 
-	public static TimingInterface getTimingControl(){
+	public TimingInterface getTimingControl(){
 		if(loop == null){
 			loop = new FrameControlLoop();
 		}
 		return loop;
 	}
 
-	public static Model getCurrentModel() {
+	public Model getCurrentModel() {
 		if (board == null){
 			NullPointerException exception = new NullPointerException("Board must need be initialized by getNewBoard");
 			Logger.error(exception, Model.class);
@@ -62,14 +82,14 @@ public class ResourceManager {
 		return board;
 	}
 
-	public static Model getNewBoard(int x_size, int y_size) {
+	public Model getNewBoard(int x_size, int y_size) {
 		X_SIZE = x_size;
 		Y_SIZE = y_size;
 		board = new ModelSingleThread(x_size, y_size);
 		return board;
 	}
 
-	public static JavaFXView getCurrentView(){
+	public JavaFXView getCurrentView(){
 		if(view == null){
 			view = new JavaFXView();
 		}

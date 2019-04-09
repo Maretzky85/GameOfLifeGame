@@ -1,9 +1,7 @@
 package com.sikoramarek.gameOfLife.controller;
 
-import com.sikoramarek.gameOfLife.common.Logger;
 import com.sikoramarek.gameOfLife.model.Model;
 import com.sikoramarek.gameOfLife.view.JavaFXView;
-import com.sikoramarek.gameOfLife.view.ViewInterface;
 import javafx.stage.Stage;
 
 public class Controller implements Runnable{
@@ -20,10 +18,11 @@ public class Controller implements Runnable{
 
 	public Controller(Stage stage){
 		gameState = GameState.INIT;
-		resourceManager = new ResourceManager(stage);
+		resourceManager = ResourceManager.getInstance();
+		resourceManager.setPrimaryStage(stage);
 	}
 
-	public synchronized void setState(GameState state){
+	public static synchronized void setState(GameState state){
 		gameState = state;
 	}
 
@@ -32,11 +31,12 @@ public class Controller implements Runnable{
 		while(true){
 			switch (gameState) {
 				case INIT:
-					ResourceManager.loadResources();
-					model = ResourceManager.getNewBoard(50,50);
-					view = ResourceManager.getCurrentView();
-					ResourceManager.getCurrentModel().changeOnPositions(positions);
-					new Thread(ResourceManager.getTimingControl()).start();
+					resourceManager.loadResources();
+					model = resourceManager.getNewBoard(50,50);
+					view = resourceManager.getCurrentView();
+					model.changeOnPositions(positions);
+					timing = resourceManager.getTimingControl();
+					new Thread(timing).start();
 					gameState = GameState.RUNNING;
 				case LOADING:
 					break;
@@ -45,13 +45,12 @@ public class Controller implements Runnable{
 				case PAUSED:
 					break;
 				case RUNNING:
-					if(ResourceManager.getTimingControl().getUpdate()){
-						ResourceManager.getCurrentView().refresh(ResourceManager.getCurrentModel().getNextGenerationBoard());
+					if(timing.getUpdate()){
+						view.refresh(model.getNextGenerationBoard());
 					}
 					break;
 			}
 		}
-
 	}
 
 	int[][] positions = new int[][]{

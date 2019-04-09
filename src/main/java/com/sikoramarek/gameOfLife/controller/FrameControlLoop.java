@@ -28,7 +28,6 @@ public class FrameControlLoop implements TimingInterface{
 	FrameControlLoop() {
 	}
 
-
 	/**
 	 * Run function for starting loop control
 	 * checks time between current time and start time, waits for rest ms,
@@ -36,7 +35,6 @@ public class FrameControlLoop implements TimingInterface{
 	 */
 	@Override
 	public void run() {
-		Logger.log("Initialized at thread: "+Thread.currentThread().getId(), this);
 		isRunning = true;
 		while (isRunning) {
 			long currentTime = System.currentTimeMillis();

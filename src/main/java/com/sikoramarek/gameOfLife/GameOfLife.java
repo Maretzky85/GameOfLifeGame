@@ -9,6 +9,8 @@ public class GameOfLife extends Application {
 
 	Thread controllerThread;
 
+	public static boolean running = true;
+
 	public static void main(String[] args) {
 		launch();
 	}

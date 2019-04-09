@@ -33,9 +33,6 @@ public class JavaFXView implements ViewInterface{
 	private boolean ongoingUpdateFromView = false;
 	private int droppedFrames = 0;
 	private int renderedFrames = 0;
-	private Dot[][] secondPlayerBoard;
-
-	private int iterator = 0;
 
 	private Text tutorialPlaceholder;
 
@@ -56,56 +53,9 @@ public class JavaFXView implements ViewInterface{
 
 	public void viewInit(int X_SIZE, int Y_SIZE){
 		Logger.log("Initialising Scene.", this);
-
-		long startTime = System.currentTimeMillis();
-
-		Logger.log("Initialising grid", this);
-
 		initGrid(X_SIZE, Y_SIZE);
+		Logger.log("Done.", this);
 
-		Logger.log("Done. Initialising grid took " + (System.currentTimeMillis() - startTime) + " ms", this);
-
-		gameScene.setCursor(Cursor.CROSSHAIR);
-
-		tutorialPlaceholder = new Text(100, 50, "");
-		tutorialPlaceholder.setFill(Color.WHITE);
-		tutorialPlaceholder.setFont(new Font(30));
-		viewBoard.getChildren().add(tutorialPlaceholder);
-
-		attachResizeListeners();
-
-		Logger.log("Initialising took " + (System.currentTimeMillis() - startTime) + " ms", this);
-
-	}
-
-	/**
-	 * Attaches listeners for stage width and height and calls resizeGrid if needed
-	 */
-	private void attachResizeListeners(){
-//		final int WINDOW_UPPER_BAR_THRESHOLD = -30;
-//
-//		gameScene.widthProperty().addListener((observable, oldValue, newValue) -> {
-//			Config.setRequestedWindowWidth(newValue.intValue());
-//			resizeGrid();
-//		});
-//
-//		gameScene.heightProperty().addListener((observable, oldValue, newValue) -> {
-//			Config.setRequestedWindowHeight(newValue.intValue()+WINDOW_UPPER_BAR_THRESHOLD);
-//			resizeGrid();
-//		});
-	}
-
-	private void resizeGrid(){
-//		for (int boardYposition = 0; boardYposition < Y_SIZE; boardYposition++) {
-//			for (int boardXposition = 0; boardXposition < X_SIZE; boardXposition++) {
-//				viewRectangleTable[boardYposition][boardXposition].setHeight(RECTANGLE_HEIGHT);
-//				viewRectangleTable[boardYposition][boardXposition].setWidth(RECTANGLE_WIDTH);
-//				viewRectangleTable[boardYposition][boardXposition].setX(RECTANGLE_WIDTH * boardXposition);
-//				viewRectangleTable[boardYposition][boardXposition].setY(RECTANGLE_HEIGHT * boardYposition);
-//				viewRectangleTable[boardYposition][boardXposition].setArcHeight(RECTANGLE_ARC_HEIGHT);
-//				viewRectangleTable[boardYposition][boardXposition].setArcWidth(RECTANGLE_ARC_WIDTH);
-//			}
-//		}
 	}
 
 	private void initGrid(int X_SIZE, int Y_SIZE){
@@ -245,9 +195,6 @@ public class JavaFXView implements ViewInterface{
 		return tutorialPlaceholder;
 	}
 
-	public void refreshSecond(Dot[][] secondPlayerBoard) {
-		this.secondPlayerBoard = secondPlayerBoard;
-	}
 
 
 	@Override
