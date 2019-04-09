@@ -1,6 +1,8 @@
 package com.sikoramarek.gameOfLife.controller;
 
 
+import com.sikoramarek.gameOfLife.common.Logger;
+
 /**
  * This class is for controlling how many frames is generated for second
  * This is clock for theoretical model, that run selected functions in requested frequency
@@ -34,6 +36,7 @@ public class FrameControlLoop implements TimingInterface{
 	 */
 	@Override
 	public void run() {
+		Logger.log("Initialized at thread: "+Thread.currentThread().getId(), this);
 		isRunning = true;
 		while (isRunning) {
 			long currentTime = System.currentTimeMillis();
@@ -43,7 +46,7 @@ public class FrameControlLoop implements TimingInterface{
 			if (timeCounterMs >= timeFrame) {
 				update = true;
 				synchronized (this){
-					this.notifyAll();
+					notifyAll();
 				}
 
 				Thread.yield();
@@ -73,8 +76,16 @@ public class FrameControlLoop implements TimingInterface{
 		if (update){
 			update = false;
 			return true;
-		}else
-			return false;
+		}else {
+			synchronized (this){
+				try {
+					wait();
+				} catch (InterruptedException e) {
+					Logger.error(e, this);
+				}
+			}
+		}
+		return false;
 	}
 
 	/**

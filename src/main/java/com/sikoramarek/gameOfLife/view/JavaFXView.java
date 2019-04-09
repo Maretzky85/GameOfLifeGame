@@ -24,7 +24,7 @@ import static javafx.scene.input.MouseEvent.MOUSE_RELEASED;
  * JavaFX view Class implements ViewInterface class
  * For viewing passed board model and passing input from user to Observable Class
  */
-public class JavaFXView{
+public class JavaFXView implements ViewInterface{
 
 	private Group viewBoard = new Group();
 	private Scene gameScene = new Scene(viewBoard, Screen.getPrimary().getBounds().getHeight(), Screen.getPrimary().getBounds().getWidth(), Color.BLACK);
@@ -194,7 +194,7 @@ public class JavaFXView{
 					for (int i = 0; i < viewRectangleTable.length; i++) {
 						for (int j = 0; j < viewRectangleTable[0].length; j++) {
 							Rectangle rectangle = viewRectangleTable[i][j];
-							if (board[i][j] != null) {
+							if (board[i][j] == Dot.ALIVE) {
 								rectangle.setFill(Color.RED);
 							} else {
 								rectangle.setFill(Color.BLACK);

@@ -2,7 +2,7 @@ package com.sikoramarek.gameOfLife.model;
 
 import java.lang.reflect.Array;
 
-public interface ModelInterface {
+public interface Model {
 
 	/**
 	 * Returns current calculated board

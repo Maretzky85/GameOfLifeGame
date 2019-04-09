@@ -7,6 +7,8 @@ import javafx.stage.Stage;
 
 public class GameOfLife extends Application {
 
+	Thread controllerThread;
+
 	public static void main(String[] args) {
 		launch();
 	}
@@ -14,6 +16,8 @@ public class GameOfLife extends Application {
 	@Override
 	public void start(Stage stage){
 		Controller controller = new Controller(stage);
-		new Thread(controller).start();
+		controllerThread = new Thread(controller);
+		controllerThread.setDaemon(true);
+		controllerThread.start();
 	}
 }
