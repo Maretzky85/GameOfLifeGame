@@ -1,6 +1,7 @@
 package com.sikoramarek.gameOfLife.client;
 
 import com.sikoramarek.gameOfLife.common.Logger;
+import com.sikoramarek.gameOfLife.model.Dot;
 
 import java.io.*;
 import java.net.Socket;
@@ -55,7 +56,9 @@ public class Client implements Runnable, Connection{
 	@Override
 	public void send(Object object) {
 		try {
+			outputStream.reset();
 			outputStream.writeObject(object);
+			outputStream.flush();
 		} catch (IOException e) {
 			Logger.error(e.getMessage(), this);
 		}

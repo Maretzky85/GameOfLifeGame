@@ -187,7 +187,9 @@ public class Controller implements Runnable{
 							view.refresh(model.getCurrentBoard(), secondPlayerBoard);
 						}else {
 							multiplayerSync.send(model.getCurrentGeneration());
-							multiplayerSync.send(model.getCurrentBoard());
+							Dot[][] board = model.getCurrentBoard();
+							multiplayerSync.send(board);
+
 							synchronized (this){
 								try {
 									wait(50);
@@ -225,6 +227,7 @@ public class Controller implements Runnable{
 			}
 
 		}
+		received.clear();
 		return false;
 	}
 

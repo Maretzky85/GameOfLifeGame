@@ -28,7 +28,7 @@ public class ModelSingleThread implements Model {
 		for (int board = 0; board < boards.length; board++) {
 			for (int line = 0; line < boards[board].length; line++) {
 				for (int point = 0; point < boards[board][line].length; point++) {
-					boards[board][line][point] = Dot.DEAD;
+					boards[board][line][point] = Dot.getDead();
 				}
 			}
 		}
@@ -47,17 +47,17 @@ public class ModelSingleThread implements Model {
 			for (int x = 0; x < currentBoard[x].length-1; x++) {
 				int aliveNeighbors = getAliveNeighbors(x, y);
 
-				if (currentBoard[y][x] == Dot.ALIVE) {
+				if (currentBoard[y][x] == Dot.getAlive()) {
 					if (Arrays.stream(ruleToLive).anyMatch(value -> value == aliveNeighbors)) {
-						nextGenBoard[y][x] = Dot.ALIVE;
+						nextGenBoard[y][x] = Dot.getAlive();
 					}else {
-						nextGenBoard[y][x] = Dot.DEAD;
+						nextGenBoard[y][x] = Dot.getDead();
 					}
 				}else {
 					if(Arrays.stream(ruleToGetAlive).anyMatch(value -> value == aliveNeighbors)){
-						nextGenBoard[y][x] = Dot.ALIVE;
+						nextGenBoard[y][x] = Dot.getAlive();
 					}else {
-						nextGenBoard[y][x] = Dot.DEAD;
+						nextGenBoard[y][x] = Dot.getDead();
 					}
 				}
 
@@ -98,7 +98,7 @@ public class ModelSingleThread implements Model {
 				}
 					if (
 							!(currentX == x && currentY == y) &&
-							currentBoard[currentY][currentX] != Dot.DEAD
+							currentBoard[currentY][currentX] != Dot.getDead()
 					)
 						neighbors++;
 			}
@@ -118,10 +118,10 @@ public class ModelSingleThread implements Model {
 		if(x >= currentBoard[0].length || y >= currentBoard.length || x < 0 || y < 0){
 			return false;
 		}
-		if(currentBoard[y][x] == Dot.DEAD){
-			currentBoard[y][x] = Dot.ALIVE;
+		if(currentBoard[y][x] == Dot.getDead()){
+			currentBoard[y][x] = Dot.getAlive();
 		}else {
-			currentBoard[y][x] = Dot.DEAD;
+			currentBoard[y][x] = Dot.getDead();
 		}
 		return true;
 	}

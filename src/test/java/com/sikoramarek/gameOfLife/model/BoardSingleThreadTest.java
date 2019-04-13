@@ -15,7 +15,7 @@ public class BoardSingleThreadTest {
 		testArray = new Dot[10][10];
 		for (int i = 0; i < testArray.length; i++) {
 			for (int j = 0; j < testArray[0].length; j++) {
-				testArray[i][j] = Dot.DEAD;
+				testArray[i][j] = Dot.getDead();
 			}
 		}
 	}
@@ -25,10 +25,10 @@ public class BoardSingleThreadTest {
 			for (int character = 0; character < pattern[line].length(); character++) {
 				switch (pattern[line].charAt(character)){
 					case '.':
-						testArray[line][character] = Dot.DEAD;
+						testArray[line][character] = Dot.getDead();
 						break;
 					case '#':
-						testArray[line][character] = Dot.ALIVE;
+						testArray[line][character] = Dot.getAlive();
 						break;
 				}
 			}
@@ -42,7 +42,7 @@ public class BoardSingleThreadTest {
 			String stringToAppend = "";
 			StringBuilder sb = new StringBuilder(stringToAppend);
 			for (int x = 0; x < board[y].length; x++) {
-				if (board[y][x] == Dot.ALIVE){
+				if (board[y][x] == Dot.getAlive()){
 					sb.append('#');
 				}else {
 					sb.append('.');
@@ -72,7 +72,7 @@ public class BoardSingleThreadTest {
 	}
 	@Test
 	public void PointInsertionTest(){
-		testArray[0][0] = Dot.ALIVE;
+		testArray[0][0] = Dot.getAlive();
 		board.changeOnPosition(0,0);
 		assertArrayEquals(testArray, board.getCurrentBoard());
 	}
@@ -121,13 +121,13 @@ public class BoardSingleThreadTest {
 
 	@Test
 	public void changeOnPositionSuccess() {
-		assertTrue(Dot.DEAD == board.getCurrentBoard()[0][0]);
+		assertTrue(Dot.getDead() == board.getCurrentBoard()[0][0]);
 		assertTrue(board.changeOnPosition(0,0));
-		assertTrue(board.getCurrentBoard()[0][0] == Dot.ALIVE);
+		assertTrue(board.getCurrentBoard()[0][0] == Dot.getAlive());
 
-		assertTrue(Dot.ALIVE == board.getCurrentBoard()[0][0]);
+		assertTrue(Dot.getAlive() == board.getCurrentBoard()[0][0]);
 		assertTrue(board.changeOnPosition(0,0));
-		assertTrue(Dot.DEAD == board.getCurrentBoard()[0][0]);
+		assertTrue(Dot.getDead() == board.getCurrentBoard()[0][0]);
 	}
 
 	@Test
@@ -140,9 +140,9 @@ public class BoardSingleThreadTest {
 	public void changeOnPositionArray(){
 		assertArrayEquals(stringFromBoard(testArray), stringFromBoard(board.getCurrentBoard()));
 		assertTrue(board.changeOnPositions(new int[][]{ {1,1},{1,2}, {1,3} }));
-		testArray[1][1] = Dot.ALIVE;
-		testArray[2][1] = Dot.ALIVE;
-		testArray[3][1] = Dot.ALIVE;
+		testArray[1][1] = Dot.getAlive();
+		testArray[2][1] = Dot.getAlive();
+		testArray[3][1] = Dot.getAlive();
 		String[] pattern = new String[]{
 				"...",
 				".#.",
