@@ -1,8 +1,11 @@
 package com.sikoramarek.gameOfLife.controller;
 
+import com.sikoramarek.gameOfLife.client.Client;
 import com.sikoramarek.gameOfLife.common.GameConfig;
+import com.sikoramarek.gameOfLife.common.GameState;
 import com.sikoramarek.gameOfLife.common.Logger;
 import com.sikoramarek.gameOfLife.common.SharedResources;
+import com.sikoramarek.gameOfLife.model.Dot;
 import com.sikoramarek.gameOfLife.model.Model;
 import com.sikoramarek.gameOfLife.view.JavaFXView;
 import com.sikoramarek.gameOfLife.view.MenuAction;
@@ -12,7 +15,6 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.util.LinkedList;
-import java.util.List;
 
 public class Controller implements Runnable{
 
@@ -26,9 +28,15 @@ public class Controller implements Runnable{
 
 	private TimingInterface timing;
 
+	private Client multiplayerSync;
+
 	Stage primaryStage;
 
 	Stage modelStage;
+	private boolean multiplayer = false;
+	private GameConfig config;
+	private Dot[][] secondPlayerBoard;
+	private Integer generation;
 
 	public Controller(Stage stage){
 		primaryStage = stage;
@@ -50,10 +58,13 @@ public class Controller implements Runnable{
 					break;
 				case LOADING:
 					//TODO load all needed to play assets
-					GameConfig config = resourceManager.getMenu().getConfig();
+					config = resourceManager.getMenu().getConfig();
 					model = resourceManager.getNewBoard(config.xSize,config.ySize);
 					model.changeOnPositions(positions);
 					view = resourceManager.getNewView();
+					if (multiplayerSync != null && multiplayerSync.isConnected()){
+						view.setMulti(true);
+					}
 					view.viewInit(config.xSize, config.ySize);
 					timing = resourceManager.getTimingControl();
 					timing.setFRAME_RATE(config.fps);
@@ -75,7 +86,12 @@ public class Controller implements Runnable{
 						}
 					}
 					new Thread(timing).start();
-					gameState = GameState.RUNNING;
+					if(multiplayer){
+						gameState = GameState.MULTIPLAYER;
+					}else {
+						gameState = GameState.RUNNING;
+					}
+
 					break;
 				case MENU:
 					//TODO show menu
@@ -127,8 +143,75 @@ public class Controller implements Runnable{
 						gameState = GameState.MENU;
 					}
 					break;
+				case MULTIPLAYER_CONFIG:
+					multiplayerSync = Client.getClient();
+					multiplayerSync.connect();
+					if(!multiplayerSync.isConnected()){
+						gameState = GameState.MENU;
+					}else {
+						config = resourceManager.getMenu().getConfig();
+						multiplayerSync.send(config);
+						multiplayer = true;
+						while (!handleServerResponse()){
+							multiplayerSync.send(config);
+							synchronized (this){
+								try {
+									wait(50);
+								} catch (InterruptedException e) {
+									Logger.error(e, this);
+								}
+							}
+						}
+						gameState = GameState.LOADING;
+					}
+					break;
+				case MULTIPLAYER:
+					handleServerResponse();
+					checkInput();
+					if (modelStage.isShowing()){
+						if(timing.getUpdate() && secondPlayerBoard != null){
+							if (generation > model.getCurrentGeneration()){
+								model.nextGenerationBoard();
+							}
+							view.refresh(model.getCurrentBoard(), secondPlayerBoard);
+							secondPlayerBoard = null;
+						}else {
+							multiplayerSync.send( (Integer) model.getCurrentGeneration());
+							multiplayerSync.send(model.getCurrentGeneration());
+							synchronized (this){
+								try {
+									wait(5);
+								} catch (InterruptedException e) {
+									Logger.error(e, this);
+								}
+							}
+						}
+					}
+					break;
 			}
 		}
+	}
+
+	private boolean handleServerResponse() {
+		LinkedList received = multiplayerSync.getReceived();
+		while(!received.isEmpty()){
+			Object object = received.pop();
+			if (object instanceof GameConfig){
+				config = (GameConfig) object;
+				return true;
+			}
+			if (object instanceof int[]){
+				int[] position = (int[]) object;
+				model.changeOnPosition(position[0], position[1]);
+			}
+			if (object instanceof Dot[][]){
+				secondPlayerBoard = (Dot[][]) object;
+			}
+			if (object instanceof Integer){
+				generation = (Integer) object;
+			}
+		}
+		return false;
 	}
 
 	private void checkInput() {
@@ -160,6 +243,7 @@ public class Controller implements Runnable{
 				gameState = GameState.LOADING;
 				break;
 			case CONNECT:
+				gameState = GameState.MULTIPLAYER_CONFIG;
 				break;
 		}
 	}

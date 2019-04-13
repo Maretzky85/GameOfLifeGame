@@ -29,12 +29,15 @@ public class JavaFXView implements ViewInterface{
 	private Group viewBoard = new Group();
 	private Scene gameScene = new Scene(viewBoard, 500, 500, Color.BLACK);
 	private Rectangle[][] viewRectangleTable;
+	private Rectangle[][] viewRectangleTableSecondPlayer;
 	private boolean ongoingUpdateFromModel = false;
 	private boolean ongoingUpdateFromView = false;
 	private int droppedFrames = 0;
 	private int renderedFrames = 0;
 	private int mouseY = 0;
 	private int mouseX = 0;
+	private boolean multi = false;
+	private boolean firstBoardUpdate = true;
 
 
 	public JavaFXView() {
@@ -76,16 +79,8 @@ public class JavaFXView implements ViewInterface{
 		initGrid(X_SIZE, Y_SIZE);
 		gameScene.setOnKeyPressed(this::handleKeyboard);
 		gameScene.setOnMouseReleased(this::handleMouse);
-		gameScene.setOnMouseMoved(this::mouseMoveHandler);
 		Logger.log("Done.", this);
 
-	}
-
-	private void mouseMoveHandler(MouseEvent mouseEvent) {
-		double mouseXpos = mouseEvent.getSceneX();
-		double mouseYpos = mouseEvent.getSceneY();
-		mouseX = (int) (mouseXpos/viewRectangleTable[0][0].getWidth());
-		mouseY = (int) (mouseYpos/viewRectangleTable[0][0].getHeight());
 	}
 
 	private void initGrid(int X_SIZE, int Y_SIZE){
@@ -96,6 +91,7 @@ public class JavaFXView implements ViewInterface{
 		int RECTANGLE_HEIGHT = (int) Screen.getPrimary().getBounds().getHeight() / Y_SIZE;
 
 		viewRectangleTable = new Rectangle[Y_SIZE][X_SIZE];
+		viewRectangleTableSecondPlayer = multi ? new Rectangle[Y_SIZE][X_SIZE] : null;
 		for (int boardYposition = 0; boardYposition < Y_SIZE; boardYposition++) {
 
 			long timeTaken = System.currentTimeMillis() - initStartTime;
@@ -110,6 +106,18 @@ public class JavaFXView implements ViewInterface{
 				rectangleToAdd.setArcWidth(5);
 				viewRectangleTable[boardYposition][boardXposition] = rectangleToAdd;
 				viewBoard.getChildren().add(viewRectangleTable[boardYposition][boardXposition]);
+
+				if (multi){
+					int offset = viewRectangleTable[0].length;
+					Rectangle rectangleToAddSecond = new Rectangle
+							((offset+boardXposition) * RECTANGLE_WIDTH,
+									boardYposition * RECTANGLE_HEIGHT,
+									RECTANGLE_WIDTH, RECTANGLE_HEIGHT);
+					rectangleToAddSecond.setArcHeight(5);
+					rectangleToAddSecond.setArcWidth(5);
+					viewRectangleTableSecondPlayer[boardYposition][boardXposition] = rectangleToAddSecond;
+					viewBoard.getChildren().add(viewRectangleTableSecondPlayer[boardYposition][boardXposition]);
+				}
 
 				if(timeTaken > 500){
 					long currentTime = System.currentTimeMillis();
@@ -169,40 +177,49 @@ public class JavaFXView implements ViewInterface{
 	 */
 
 	public void refresh(Dot[][] board) {
+		refreshHelper(board, null);
+	}
+
+	public void refresh(Dot[][] board, Dot[][] boardSecondPlayer){
+		refreshHelper(board, boardSecondPlayer);
+	}
+
+	private void refreshHelper(Dot[][] board, Dot[][] board2){
 		if(viewRectangleTable == null){
-			Platform.runLater(() -> {
-				viewInit(board[0].length, board.length);
-			});
+			Platform.runLater(() -> viewInit(board[0].length, board.length));
 		}
 		if (!ongoingUpdateFromModel && !ongoingUpdateFromView) {
 			ongoingUpdateFromModel = true;
 			Platform.runLater(() -> {
-					for (int i = 0; i < viewRectangleTable.length; i++) {
-						for (int j = 0; j < viewRectangleTable[0].length; j++) {
-							Rectangle rectangle = viewRectangleTable[i][j];
-							if (board[i][j] == Dot.ALIVE) {
-								if(mouseX == j&& mouseY == i){
-									rectangle.setFill(Color.FIREBRICK);
-								}else{
-									rectangle.setFill(Color.RED);
-								}
-
+				for (int i = 0; i < viewRectangleTable.length; i++) {
+					for (int j = 0; j < viewRectangleTable[0].length; j++) {
+						Rectangle rectangle = viewRectangleTable[i][j];
+						if (board[i][j] == Dot.ALIVE) {
+							rectangle.setFill(Color.RED);
+						} else {
+							rectangle.setFill(Color.BLACK);
+						}
+						if (multi && board2 != null){
+							Rectangle rectangle2 = viewRectangleTableSecondPlayer[i][j];
+							if (board2[i][j] == Dot.ALIVE) {
+								rectangle.setFill(Color.RED);
 							} else {
-								if(mouseX == j&& mouseY == i){
-									rectangle.setFill(Color.MIDNIGHTBLUE);
-								}else{
-									rectangle.setFill(Color.BLACK);
-								}
+								rectangle.setFill(Color.BLACK);
 							}
 						}
 					}
-					renderedFrames++;
-					ongoingUpdateFromModel = false;
+				}
+				renderedFrames++;
+				ongoingUpdateFromModel = false;
 			});
-
 		} else {
 			droppedFrames++;
 		}
+	}
+
+	@Override
+	public void setMulti(boolean multi) {
+		this.multi = true;
 	}
 
 
@@ -252,6 +269,4 @@ public class JavaFXView implements ViewInterface{
 	public String toString(){
 		return "JavaFX";
 	}
-
-
 }
