@@ -94,7 +94,7 @@ public class Controller implements Runnable{
 
 					break;
 				case MENU:
-					//TODO show menu
+
 					if (!primaryStage.isShowing()){
 						Platform.runLater(() -> {
 							primaryStage.setScene(resourceManager.getMenu().getMenuScene());
@@ -146,6 +146,15 @@ public class Controller implements Runnable{
 				case MULTIPLAYER_CONFIG:
 					multiplayerSync = Client.getClient();
 					multiplayerSync.connect();
+					while (multiplayerSync.isConnecting()){
+						synchronized (this){
+							try {
+								wait(5);
+							} catch (InterruptedException e) {
+								Logger.error(e, this);
+							}
+						}
+					}
 					if(!multiplayerSync.isConnected()){
 						gameState = GameState.MENU;
 					}else {
@@ -194,9 +203,11 @@ public class Controller implements Runnable{
 
 	private boolean handleServerResponse() {
 		LinkedList received = multiplayerSync.getReceived();
+		System.out.println(received);
 		while(!received.isEmpty()){
 			Object object = received.pop();
 			if (object instanceof GameConfig){
+				System.out.println("game config received");
 				config = (GameConfig) object;
 				return true;
 			}

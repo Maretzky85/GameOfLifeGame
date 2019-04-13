@@ -1,6 +1,8 @@
 package com.sikoramarek.gameOfLife.common;
 
-public class GameConfig {
+import java.io.Serializable;
+
+public class GameConfig implements Serializable {
 	public final int xSize;
 	public final int ySize;
 	public final int fps;

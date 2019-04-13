@@ -36,6 +36,7 @@ public class Client implements Runnable, Connection{
 	}
 
 	public void connect(){
+		connecting = true;
 		if (connected){
 			Logger.error("Reconnecting", this);
 			disconnect();
@@ -53,6 +54,7 @@ public class Client implements Runnable, Connection{
 
 	@Override
 	public void send(Object object) {
+		System.out.println("sending "+object);
 		try {
 			outputStream.writeObject(object);
 		} catch (IOException e) {
@@ -80,15 +82,6 @@ public class Client implements Runnable, Connection{
 	}
 
 	public boolean isConnected() {
-		if (connecting){
-			synchronized (this){
-				try {
-					wait();
-				} catch (InterruptedException e) {
-					Logger.error(e, this);
-				}
-			}
-		}
 		return connected;
 	}
 
@@ -153,5 +146,8 @@ public class Client implements Runnable, Connection{
 
 	}
 
+	public boolean isConnecting() {
+		return connecting;
+	}
 }
 
