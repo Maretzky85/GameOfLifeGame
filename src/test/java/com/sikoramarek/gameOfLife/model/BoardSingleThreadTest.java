@@ -67,7 +67,7 @@ public class BoardSingleThreadTest {
 
 	@Test
 	public void trafficLightTest() {
-		assertArrayEquals(board.getCurrentBoard(), board.getNextGenerationBoard());
+		assertArrayEquals(board.getCurrentBoard(), board.nextGenerationBoard());
 		String[] pattern1 = new String[]{
 				".#.",
 				".#.",
@@ -77,7 +77,7 @@ public class BoardSingleThreadTest {
 				"###",
 				"..."};
 		board.importBoard(boardFromStringArr(pattern1));
-		assertArrayEquals(stringFromBoard(boardFromStringArr(pattern2)), stringFromBoard(board.getNextGenerationBoard()));
+		assertArrayEquals(stringFromBoard(boardFromStringArr(pattern2)), stringFromBoard(board.nextGenerationBoard()));
 	}
 
 	@Test
@@ -93,16 +93,16 @@ public class BoardSingleThreadTest {
 				".##.",
 				".#.."};
 		board.importBoard(boardFromStringArr(pattern1));
-		assertArrayEquals(stringFromBoard(boardFromStringArr(pattern2)), stringFromBoard(board.getNextGenerationBoard()));
+		assertArrayEquals(stringFromBoard(boardFromStringArr(pattern2)), stringFromBoard(board.nextGenerationBoard()));
 	}
 
 	@Test
 	public void generationCountTest() {
 		assertSame(0, board.getCurrentGeneration());
-		board.getNextGenerationBoard();
+		board.nextGenerationBoard();
 		assertSame(1, board.getCurrentGeneration());
 		for (int i = 0; i < 10; i++) {
-			board.getNextGenerationBoard();
+			board.nextGenerationBoard();
 		}
 		assertSame(11, board.getCurrentGeneration());
 	}

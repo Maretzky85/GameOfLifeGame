@@ -40,7 +40,7 @@ public class ModelSingleThread implements Model {
 	}
 
 	@Override
-	public Dot[][] getNextGenerationBoard() {
+	public Dot[][] nextGenerationBoard() {
 		Dot[][] currentBoard = boardsSwapped ? boards[1]:boards[0];
 		Dot[][] nextGenBoard = boardsSwapped ? boards[0]:boards[1];
 		for (int y = 0; y < currentBoard.length-1; y++) {

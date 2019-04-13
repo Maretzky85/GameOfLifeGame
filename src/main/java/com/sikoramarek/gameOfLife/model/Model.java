@@ -16,7 +16,7 @@ public interface Model {
 	 *
 	 * @return Dot[][]
 	 */
-	Dot[][] getNextGenerationBoard();
+	Dot[][] nextGenerationBoard();
 
 	/**
 	 * returns current (already calculated) board generation counted from beginning of class

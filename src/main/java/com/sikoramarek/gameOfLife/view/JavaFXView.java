@@ -138,6 +138,11 @@ public class JavaFXView implements ViewInterface{
 	 */
 
 	public void refresh(Dot[][] board) {
+		if(viewRectangleTable == null){
+			Platform.runLater(() -> {
+				viewInit(board[0].length, board.length);
+			});
+		}
 		if (!ongoingUpdateFromModel && !ongoingUpdateFromView) {
 			ongoingUpdateFromModel = true;
 			Platform.runLater(() -> {

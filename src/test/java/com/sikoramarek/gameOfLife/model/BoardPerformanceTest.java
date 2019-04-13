@@ -10,7 +10,7 @@ public class BoardPerformanceTest {
 		ModelSingleThread board = new ModelSingleThread(50,50);
 		long startTime = System.currentTimeMillis();
 		while(board.getCurrentGeneration() < REPEAT_TIMES){
-			board.getNextGenerationBoard();
+			board.nextGenerationBoard();
 		}
 		long timeTaken = System.currentTimeMillis() - startTime;
 		int genPerSec = (int) (1000/ ((double)timeTaken/REPEAT_TIMES));
@@ -23,7 +23,7 @@ public class BoardPerformanceTest {
 		ModelSingleThread board = new ModelSingleThread(1000,1000);
 		long startTime = System.currentTimeMillis();
 		while(board.getCurrentGeneration() < REPEAT_TIMES){
-			board.getNextGenerationBoard();
+			board.nextGenerationBoard();
 		}
 		long timeTaken = System.currentTimeMillis() - startTime;
 		int genPerSec = (int) (1000/ ((double)timeTaken/REPEAT_TIMES));

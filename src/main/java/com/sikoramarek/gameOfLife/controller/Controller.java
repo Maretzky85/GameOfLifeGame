@@ -1,7 +1,10 @@
 package com.sikoramarek.gameOfLife.controller;
 
+import com.sikoramarek.gameOfLife.common.Logger;
 import com.sikoramarek.gameOfLife.model.Model;
 import com.sikoramarek.gameOfLife.view.JavaFXView;
+import com.sikoramarek.gameOfLife.view.MenuAction;
+import javafx.application.Platform;
 import javafx.stage.Stage;
 
 public class Controller implements Runnable{
@@ -16,10 +19,13 @@ public class Controller implements Runnable{
 
 	private TimingInterface timing;
 
+	Stage primaryStage;
+
+	Stage modelStage;
+
 	public Controller(Stage stage){
+		primaryStage = stage;
 		gameState = GameState.INIT;
-		resourceManager = ResourceManager.getInstance();
-		resourceManager.setPrimaryStage(stage);
 	}
 
 	public static synchronized void setState(GameState state){
@@ -31,25 +37,96 @@ public class Controller implements Runnable{
 		while(true){
 			switch (gameState) {
 				case INIT:
-					resourceManager.loadResources();
+					Logger.log("Init", this);
+					//TODO load required assets and switch to menu
+					resourceManager = ResourceManager.getInstance();
+					gameState = GameState.MENU;
+					break;
+				case LOADING:
+					Logger.log("Loading", this);
+					//TODO load all needed to play assets
 					model = resourceManager.getNewBoard(50,50);
-					view = resourceManager.getCurrentView();
 					model.changeOnPositions(positions);
+					view = resourceManager.getCurrentView();
+					Platform.runLater(()->{
+
+						modelStage = new Stage();
+						modelStage.setScene(view.getScene());
+						primaryStage.close();
+						modelStage.show();
+
+					});
+					synchronized (this){
+						try {
+							wait(5);
+						} catch (InterruptedException e) {
+							Logger.error(e, this);
+						}
+					}
+
 					timing = resourceManager.getTimingControl();
 					new Thread(timing).start();
 					gameState = GameState.RUNNING;
-				case LOADING:
 					break;
 				case MENU:
+//					Logger.log("Menu", this);
+					//TODO show menu
+					if (!primaryStage.isShowing()){
+						Platform.runLater(() -> {
+							primaryStage.setScene(resourceManager.getMenu().getMenuScene());
+							primaryStage.show();
+						});
+						while(!primaryStage.isShowing()){
+							synchronized (this){
+								try {
+									wait(5);
+								} catch (InterruptedException e) {
+									Logger.error(e, this);
+								}
+							}
+						}
+					}
+					MenuAction action = resourceManager.getMenu().getAction();
+					if (action != null){
+						handleMenuAction(action);
+					}else {
+						try {
+							synchronized (this){
+								wait(10);
+							}
+						} catch (InterruptedException e) {
+							Logger.error(e, this);
+						}
+					}
 					break;
 				case PAUSED:
+					try {
+						wait(5);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 					break;
 				case RUNNING:
-					if(timing.getUpdate()){
-						view.refresh(model.getNextGenerationBoard());
+					if (modelStage.isShowing()){
+						if(timing.getUpdate()){
+							view.refresh(model.nextGenerationBoard());
+						}
+					}else {
+						Platform.runLater(() -> primaryStage.show());
+						gameState = GameState.MENU;
 					}
 					break;
 			}
+		}
+	}
+
+	private void handleMenuAction(MenuAction action) {
+		switch (action) {
+			case START:
+				gameState = GameState.LOADING;
+				break;
+			case CONNECT:
+				break;
 		}
 	}
 

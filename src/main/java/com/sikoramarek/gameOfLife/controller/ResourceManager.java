@@ -39,6 +39,13 @@ public class ResourceManager {
 		return instance;
 	}
 
+	public WindowedMenu getMenu() {
+		if (menu == null){
+			menu = new WindowedMenu();
+		}
+		return menu;
+	}
+
 	public void setPrimaryStage(Stage primaryStage){
 		this.primaryStage = primaryStage;
 	}
@@ -53,7 +60,7 @@ public class ResourceManager {
 			primaryStage.setScene(view.getScene());
 			primaryStage.show();
 			secondaryStage = new Stage();
-			secondaryStage.setScene(menu.getMenu());
+			secondaryStage.setScene(menu.getMenuScene());
 			secondaryStage.show();
 		});
 
