@@ -179,7 +179,7 @@ public class Controller implements Runnable{
 					checkInput();
 					if (modelStage.isShowing()){
 						if(timing.getUpdate() && secondPlayerBoard != null){
-							if (generation > model.getCurrentGeneration()){
+							if (generation >= model.getCurrentGeneration()){
 								model.nextGenerationBoard();
 							}
 							view.refresh(model.getCurrentBoard(), secondPlayerBoard);
