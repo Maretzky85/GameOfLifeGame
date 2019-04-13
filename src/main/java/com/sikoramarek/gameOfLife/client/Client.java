@@ -15,7 +15,7 @@ public class Client implements Runnable, Connection{
 	private BufferedInputStream bufferedInputStream;
 	private ObjectOutputStream outputStream;
 
-	String host = "localhost";
+	String host = "192.168.8.144";
 
 	private boolean connected = false;
 	private boolean connecting =false;
@@ -54,7 +54,7 @@ public class Client implements Runnable, Connection{
 
 	@Override
 	public void send(Object object) {
-		System.out.println("sending "+object);
+		System.out.println("Sending "+object.getClass());
 		try {
 			outputStream.writeObject(object);
 		} catch (IOException e) {
@@ -90,7 +90,7 @@ public class Client implements Runnable, Connection{
 		connecting = true;
 		do {
 			try {
-				serviceSocket = new Socket("localhost", 65432);
+				serviceSocket = new Socket(host, 65432);
 				outputStream = new ObjectOutputStream(serviceSocket.getOutputStream());
 				bufferedInputStream = new BufferedInputStream(serviceSocket.getInputStream());
 				inputStream = new ObjectInputStream(bufferedInputStream);

@@ -185,11 +185,11 @@ public class Controller implements Runnable{
 							view.refresh(model.getCurrentBoard(), secondPlayerBoard);
 							secondPlayerBoard = null;
 						}else {
-							multiplayerSync.send( (Integer) model.getCurrentGeneration());
 							multiplayerSync.send(model.getCurrentGeneration());
+							multiplayerSync.send(model.getCurrentBoard());
 							synchronized (this){
 								try {
-									wait(5);
+									wait(50);
 								} catch (InterruptedException e) {
 									Logger.error(e, this);
 								}
@@ -203,21 +203,20 @@ public class Controller implements Runnable{
 
 	private boolean handleServerResponse() {
 		LinkedList received = multiplayerSync.getReceived();
-		System.out.println(received);
 		while(!received.isEmpty()){
 			Object object = received.pop();
+			System.out.println("received "+object.getClass());
 			if (object instanceof GameConfig){
-				System.out.println("game config received");
 				config = (GameConfig) object;
 				return true;
-			}
+			}else
 			if (object instanceof int[]){
 				int[] position = (int[]) object;
 				model.changeOnPosition(position[0], position[1]);
-			}
+			}else
 			if (object instanceof Dot[][]){
 				secondPlayerBoard = (Dot[][]) object;
-			}
+			}else
 			if (object instanceof Integer){
 				generation = (Integer) object;
 			}
