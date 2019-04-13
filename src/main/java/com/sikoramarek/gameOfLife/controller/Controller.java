@@ -178,12 +178,11 @@ public class Controller implements Runnable{
 					handleServerResponse();
 					checkInput();
 					if (modelStage.isShowing()){
-						if(timing.getUpdate() && secondPlayerBoard != null){
+						if(timing.getUpdate()){
 							if (generation >= model.getCurrentGeneration()){
 								model.nextGenerationBoard();
 							}
 							view.refresh(model.getCurrentBoard(), secondPlayerBoard);
-							secondPlayerBoard = null;
 						}else {
 							multiplayerSync.send(model.getCurrentGeneration());
 							multiplayerSync.send(model.getCurrentBoard());
@@ -214,7 +213,6 @@ public class Controller implements Runnable{
 				model.changeOnPosition(position[0], position[1]);
 			}else
 			if (object instanceof Dot[][]){
-				Logger.log("Rec board update", this);
 				secondPlayerBoard = (Dot[][]) object;
 			}else
 			if (object instanceof Integer){

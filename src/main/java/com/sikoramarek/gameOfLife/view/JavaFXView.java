@@ -34,10 +34,7 @@ public class JavaFXView implements ViewInterface{
 	private boolean ongoingUpdateFromView = false;
 	private int droppedFrames = 0;
 	private int renderedFrames = 0;
-	private int mouseY = 0;
-	private int mouseX = 0;
 	private boolean multi = false;
-	private boolean firstBoardUpdate = true;
 
 
 	public JavaFXView() {
@@ -50,6 +47,10 @@ public class JavaFXView implements ViewInterface{
 		if(viewRectangleTable != null){
 			double rectangleHeight = gameScene.getHeight() / viewRectangleTable.length;
 			double rectangleWidth = gameScene.getWidth() / viewRectangleTable[0].length;
+			if (multi){
+				rectangleWidth = rectangleWidth/2;
+			}
+			double offset = rectangleWidth*viewRectangleTable.length;
 			for (int i = 0; i < viewRectangleTable.length; i++) {
 				for (int j = 0; j < viewRectangleTable[0].length; j++) {
 					Rectangle rectangle = viewRectangleTable[i][j];
@@ -57,6 +58,12 @@ public class JavaFXView implements ViewInterface{
 					rectangle.setX(rectangleWidth * j);
 					rectangle.setHeight(rectangleHeight);
 					rectangle.setWidth(rectangleWidth);
+
+					Rectangle rectangle2 = viewRectangleTableSecondPlayer[i][j];
+					rectangle2.setY(rectangleHeight * i);
+					rectangle2.setX(offset + rectangleWidth * j);
+					rectangle2.setHeight(rectangleHeight);
+					rectangle2.setWidth(rectangleWidth);
 				}
 			}
 		}
@@ -89,9 +96,13 @@ public class JavaFXView implements ViewInterface{
 
 		int RECTANGLE_WIDTH = (int) Screen.getPrimary().getBounds().getWidth() / X_SIZE;
 		int RECTANGLE_HEIGHT = (int) Screen.getPrimary().getBounds().getHeight() / Y_SIZE;
+		if (multi){
+			RECTANGLE_WIDTH = RECTANGLE_WIDTH/2;
+		}
 
 		viewRectangleTable = new Rectangle[Y_SIZE][X_SIZE];
-		viewRectangleTableSecondPlayer = multi ? new Rectangle[Y_SIZE][X_SIZE] : null;
+		viewRectangleTableSecondPlayer = new Rectangle[Y_SIZE][X_SIZE];
+		double offset = viewRectangleTable[0].length;
 		for (int boardYposition = 0; boardYposition < Y_SIZE; boardYposition++) {
 
 			long timeTaken = System.currentTimeMillis() - initStartTime;
@@ -108,13 +119,13 @@ public class JavaFXView implements ViewInterface{
 				viewBoard.getChildren().add(viewRectangleTable[boardYposition][boardXposition]);
 
 				if (multi){
-					int offset = viewRectangleTable[0].length;
 					Rectangle rectangleToAddSecond = new Rectangle
-							((offset+boardXposition) * RECTANGLE_WIDTH,
+							(offset + boardXposition * RECTANGLE_WIDTH,
 									boardYposition * RECTANGLE_HEIGHT,
 									RECTANGLE_WIDTH, RECTANGLE_HEIGHT);
 					rectangleToAddSecond.setArcHeight(5);
 					rectangleToAddSecond.setArcWidth(5);
+					rectangleToAddSecond.setFill(Color.WHITE);
 					viewRectangleTableSecondPlayer[boardYposition][boardXposition] = rectangleToAddSecond;
 					viewBoard.getChildren().add(viewRectangleTableSecondPlayer[boardYposition][boardXposition]);
 				}
@@ -199,12 +210,12 @@ public class JavaFXView implements ViewInterface{
 						} else {
 							rectangle.setFill(Color.BLACK);
 						}
-						if (multi && board2.length == board.length){
+						if (board2 != null && multi && board2.length == board.length){
 							Rectangle rectangle2 = viewRectangleTableSecondPlayer[i][j];
 							if (board2[i][j] == Dot.ALIVE) {
-								rectangle.setFill(Color.RED);
+								rectangle2.setFill(Color.RED);
 							} else {
-								rectangle.setFill(Color.BLACK);
+								rectangle2.setFill(Color.BLACK);
 							}
 						}
 					}
@@ -252,6 +263,8 @@ public class JavaFXView implements ViewInterface{
 			if (me.getButton() == MouseButton.PRIMARY) {
 				if(node != null && node instanceof Rectangle){
 					Rectangle rectangle =(Rectangle) me.getPickResult().getIntersectedNode();
+					System.out.println((int) (rectangle.getX()/rectangle.getWidth()));
+					System.out.println((int) (rectangle.getY()/rectangle.getHeight()));
 					SharedResources.positions.add(new int[]{
 							(int) (rectangle.getX()/rectangle.getWidth()),
 							(int) (rectangle.getY()/rectangle.getHeight())
