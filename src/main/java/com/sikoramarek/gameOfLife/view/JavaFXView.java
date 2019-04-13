@@ -205,14 +205,14 @@ public class JavaFXView implements ViewInterface{
 				for (int i = 0; i < viewRectangleTable.length; i++) {
 					for (int j = 0; j < viewRectangleTable[0].length; j++) {
 						Rectangle rectangle = viewRectangleTable[i][j];
-						if (board[i][j] == Dot.getAlive()) {
+						if (board[i][j] == Dot.ALIVE) {
 							rectangle.setFill(Color.RED);
 						} else {
 							rectangle.setFill(Color.BLACK);
 						}
 						if (board2 != null && multi && board2.length == board.length){
 							Rectangle rectangle2 = viewRectangleTableSecondPlayer[i][j];
-							if (board2[i][j] == Dot.getAlive()) {
+							if (board2[i][j] == Dot.ALIVE) {
 								rectangle2.setFill(Color.RED);
 							} else {
 								rectangle2.setFill(Color.BLACK);

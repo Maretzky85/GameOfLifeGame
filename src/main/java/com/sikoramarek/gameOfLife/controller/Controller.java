@@ -36,7 +36,7 @@ public class Controller implements Runnable{
 	private boolean multiplayer = false;
 	private GameConfig config;
 	private Dot[][] secondPlayerBoard;
-	private Integer generation;
+	private Integer generation = -1;
 
 	public Controller(Stage stage){
 		primaryStage = stage;
