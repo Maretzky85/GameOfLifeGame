@@ -4,7 +4,6 @@ import com.sikoramarek.gameOfLife.common.Logger;
 import com.sikoramarek.gameOfLife.model.Dot;
 
 import javafx.application.Platform;
-import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
@@ -12,8 +11,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import javafx.stage.Screen;
 
 import java.text.DecimalFormat;
@@ -27,16 +24,34 @@ import static javafx.scene.input.MouseEvent.MOUSE_RELEASED;
 public class JavaFXView implements ViewInterface{
 
 	private Group viewBoard = new Group();
-	private Scene gameScene = new Scene(viewBoard, Screen.getPrimary().getBounds().getHeight(), Screen.getPrimary().getBounds().getWidth(), Color.BLACK);
+	private Scene gameScene = new Scene(viewBoard, 500, 500, Color.BLACK);
 	private Rectangle[][] viewRectangleTable;
 	private boolean ongoingUpdateFromModel = false;
 	private boolean ongoingUpdateFromView = false;
 	private int droppedFrames = 0;
 	private int renderedFrames = 0;
 
-	private Text tutorialPlaceholder;
 
 	public JavaFXView() {
+		gameScene.widthProperty().addListener(observable -> resize());
+		gameScene.heightProperty().addListener(observable -> resize());
+
+	}
+
+	private void resize(){
+		if(viewRectangleTable != null){
+			double rectangleHeight = gameScene.getHeight() / viewRectangleTable.length;
+			double rectangleWidth = gameScene.getWidth() / viewRectangleTable[0].length;
+			for (int i = 0; i < viewRectangleTable.length; i++) {
+				for (int j = 0; j < viewRectangleTable[0].length; j++) {
+					Rectangle rectangle = viewRectangleTable[i][j];
+					rectangle.setY(rectangleHeight * i);
+					rectangle.setX(rectangleWidth * j);
+					rectangle.setHeight(rectangleHeight);
+					rectangle.setWidth(rectangleWidth);
+				}
+			}
+		}
 	}
 
 	public Scene getScene() {
@@ -94,6 +109,7 @@ public class JavaFXView implements ViewInterface{
 
 			}
 		}
+		Platform.runLater(this::resize);
 	}
 
 
@@ -195,12 +211,6 @@ public class JavaFXView implements ViewInterface{
 			}
 		}
 	}
-
-	public Text getTutorialPlaceholder() {
-		return tutorialPlaceholder;
-	}
-
-
 
 	@Override
 	public String toString(){

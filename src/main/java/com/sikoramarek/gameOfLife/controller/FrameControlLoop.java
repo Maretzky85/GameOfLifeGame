@@ -50,12 +50,12 @@ public class FrameControlLoop implements TimingInterface{
 				Thread.yield();
 				tics += 1;
 				timeCounterMs = 0;
-			}
+			}else
 			if(timeFrame - timeCounterMs > 0){
 				try {
 					Thread.sleep(timeFrame - timeCounterMs);
 				} catch (InterruptedException e) {
-					System.out.println("interrupted "+e.getMessage());
+					Logger.error(e, this);
 				}
 			}
 
@@ -112,7 +112,11 @@ public class FrameControlLoop implements TimingInterface{
 			return true;
 		}else
 			return false;
+	}
 
+	public synchronized void setFRAME_RATE(int FRAME_RATE) {
+		this.FRAME_RATE = FRAME_RATE;
+		timeFrame = 1000 / FRAME_RATE;
 
 	}
 

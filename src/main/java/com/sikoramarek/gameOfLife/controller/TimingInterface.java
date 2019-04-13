@@ -9,4 +9,6 @@ public interface TimingInterface extends Runnable{
 	 */
 	boolean getUpdate();
 
+	void setFRAME_RATE(int FRAME_RATE);
+
 }

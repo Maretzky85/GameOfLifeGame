@@ -102,4 +102,9 @@ public class ResourceManager {
 		}
 		return view;
 	}
+
+	public JavaFXView getNewView() {
+		view = new JavaFXView();
+		return view;
+	}
 }

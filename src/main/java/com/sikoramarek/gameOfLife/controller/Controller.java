@@ -1,11 +1,13 @@
 package com.sikoramarek.gameOfLife.controller;
 
+import com.sikoramarek.gameOfLife.common.GameConfig;
 import com.sikoramarek.gameOfLife.common.Logger;
 import com.sikoramarek.gameOfLife.model.Model;
 import com.sikoramarek.gameOfLife.view.JavaFXView;
 import com.sikoramarek.gameOfLife.view.MenuAction;
 import javafx.application.Platform;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class Controller implements Runnable{
 
@@ -37,39 +39,40 @@ public class Controller implements Runnable{
 		while(true){
 			switch (gameState) {
 				case INIT:
-					Logger.log("Init", this);
 					//TODO load required assets and switch to menu
 					resourceManager = ResourceManager.getInstance();
 					gameState = GameState.MENU;
 					break;
 				case LOADING:
-					Logger.log("Loading", this);
 					//TODO load all needed to play assets
-					model = resourceManager.getNewBoard(50,50);
+					GameConfig config = resourceManager.getMenu().getConfig();
+					model = resourceManager.getNewBoard(config.xSize,config.ySize);
 					model.changeOnPositions(positions);
-					view = resourceManager.getCurrentView();
+					view = resourceManager.getNewView();
+					view.viewInit(config.xSize, config.ySize);
+					timing = resourceManager.getTimingControl();
+					timing.setFRAME_RATE(config.fps);
 					Platform.runLater(()->{
 
 						modelStage = new Stage();
+						modelStage.initStyle(StageStyle.UTILITY);
 						modelStage.setScene(view.getScene());
-						primaryStage.close();
 						modelStage.show();
 
 					});
-					synchronized (this){
-						try {
-							wait(5);
-						} catch (InterruptedException e) {
-							Logger.error(e, this);
+					while(modelStage == null || !modelStage.isShowing()){
+						synchronized (this){
+							try {
+								wait(5);
+							} catch (InterruptedException e) {
+								Logger.error(e, this);
+							}
 						}
 					}
-
-					timing = resourceManager.getTimingControl();
 					new Thread(timing).start();
 					gameState = GameState.RUNNING;
 					break;
 				case MENU:
-//					Logger.log("Menu", this);
 					//TODO show menu
 					if (!primaryStage.isShowing()){
 						Platform.runLater(() -> {
@@ -112,7 +115,6 @@ public class Controller implements Runnable{
 							view.refresh(model.nextGenerationBoard());
 						}
 					}else {
-						Platform.runLater(() -> primaryStage.show());
 						gameState = GameState.MENU;
 					}
 					break;

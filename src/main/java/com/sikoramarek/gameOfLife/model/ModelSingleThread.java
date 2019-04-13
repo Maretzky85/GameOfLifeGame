@@ -115,7 +115,7 @@ public class ModelSingleThread implements Model {
 	@Override
 	public boolean changeOnPosition(int x, int y) {
 		Dot[][] currentBoard = getCurrentBoard();
-		if(x > currentBoard[0].length || y > currentBoard.length || x < 0 || y < 0){
+		if(x >= currentBoard[0].length || y >= currentBoard.length || x < 0 || y < 0){
 			return false;
 		}
 		if(currentBoard[y][x] == Dot.DEAD){
