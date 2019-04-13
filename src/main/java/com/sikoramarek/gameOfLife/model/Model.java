@@ -1,6 +1,5 @@
 package com.sikoramarek.gameOfLife.model;
 
-import java.lang.reflect.Array;
 import java.util.LinkedList;
 
 public interface Model {

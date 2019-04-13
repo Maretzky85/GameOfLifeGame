@@ -54,6 +54,18 @@ public class BoardSingleThreadTest {
 	}
 
 	@Test
+	public void sameBoardTest() {
+		String[] pattern1 = new String[]{
+				".#.",
+				".#.",
+				".#."};
+		board.importBoard(boardFromStringArr(pattern1));
+		Dot[][] first = board.nextGenerationBoard();
+		Dot[][] second = board.getCurrentBoard();
+		assertTrue(first == second);
+	}
+
+	@Test
 	public void EmptyBoardTest() {
 		assertArrayEquals(testArray, board.getCurrentBoard());
 

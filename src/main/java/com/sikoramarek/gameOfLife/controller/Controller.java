@@ -59,7 +59,9 @@ public class Controller implements Runnable{
 				case LOADING:
 					//TODO load all needed to play assets
 					Logger.log("Loading", this);
-					config = resourceManager.getMenu().getConfig();
+					if (config == null){
+						config = resourceManager.getMenu().getConfig();
+					}
 					model = resourceManager.getNewBoard(config.xSize,config.ySize);
 					model.changeOnPositions(positions);
 					view = resourceManager.getNewView();
@@ -179,7 +181,6 @@ public class Controller implements Runnable{
 					checkInput();
 					if (modelStage.isShowing()){
 						if(timing.getUpdate()){
-							System.out.println(generation + "  "+model.getCurrentGeneration());
 							if (generation >= model.getCurrentGeneration()){
 								model.nextGenerationBoard();
 							}

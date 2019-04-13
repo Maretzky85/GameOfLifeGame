@@ -36,7 +36,6 @@ public class ModelSingleThread implements Model {
 
 	@Override
 	public Dot[][] getCurrentBoard() {
-
 		return boardsSwapped ? boards[1]:boards[0];
 	}
 
