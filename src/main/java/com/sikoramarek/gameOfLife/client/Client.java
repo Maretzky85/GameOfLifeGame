@@ -54,7 +54,6 @@ public class Client implements Runnable, Connection{
 
 	@Override
 	public void send(Object object) {
-		System.out.println("Sending "+object.getClass());
 		try {
 			outputStream.writeObject(object);
 		} catch (IOException e) {

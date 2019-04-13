@@ -58,11 +58,12 @@ public class Controller implements Runnable{
 					break;
 				case LOADING:
 					//TODO load all needed to play assets
+					Logger.log("Loading", this);
 					config = resourceManager.getMenu().getConfig();
 					model = resourceManager.getNewBoard(config.xSize,config.ySize);
 					model.changeOnPositions(positions);
 					view = resourceManager.getNewView();
-					if (multiplayerSync != null && multiplayerSync.isConnected()){
+					if (multiplayerSync != null){
 						view.setMulti(true);
 					}
 					view.viewInit(config.xSize, config.ySize);
@@ -94,7 +95,6 @@ public class Controller implements Runnable{
 
 					break;
 				case MENU:
-
 					if (!primaryStage.isShowing()){
 						Platform.runLater(() -> {
 							primaryStage.setScene(resourceManager.getMenu().getMenuScene());
@@ -205,7 +205,6 @@ public class Controller implements Runnable{
 		LinkedList received = multiplayerSync.getReceived();
 		while(!received.isEmpty()){
 			Object object = received.pop();
-			System.out.println("received "+object.getClass());
 			if (object instanceof GameConfig){
 				config = (GameConfig) object;
 				return true;
@@ -215,11 +214,16 @@ public class Controller implements Runnable{
 				model.changeOnPosition(position[0], position[1]);
 			}else
 			if (object instanceof Dot[][]){
+				Logger.log("Rec board update", this);
 				secondPlayerBoard = (Dot[][]) object;
 			}else
 			if (object instanceof Integer){
 				generation = (Integer) object;
+			}else
+			if (object instanceof String){
+				Logger.log((String) object, this);
 			}
+
 		}
 		return false;
 	}
