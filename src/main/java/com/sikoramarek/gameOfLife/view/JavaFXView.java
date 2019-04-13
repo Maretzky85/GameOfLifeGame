@@ -199,7 +199,7 @@ public class JavaFXView implements ViewInterface{
 						} else {
 							rectangle.setFill(Color.BLACK);
 						}
-						if (multi && board2 != null){
+						if (multi && board2.length == board.length){
 							Rectangle rectangle2 = viewRectangleTableSecondPlayer[i][j];
 							if (board2[i][j] == Dot.ALIVE) {
 								rectangle.setFill(Color.RED);
