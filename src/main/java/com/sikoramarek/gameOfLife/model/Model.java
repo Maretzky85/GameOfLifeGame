@@ -1,6 +1,7 @@
 package com.sikoramarek.gameOfLife.model;
 
 import java.lang.reflect.Array;
+import java.util.LinkedList;
 
 public interface Model {
 
@@ -38,6 +39,8 @@ public interface Model {
 	 * @return true if any points successfully changed
 	 */
 	boolean changeOnPositions(int[][] array);
+
+	boolean changeOnPositions(LinkedList<int[]> array);
 
 	/**
 	 * Allows to load new board state

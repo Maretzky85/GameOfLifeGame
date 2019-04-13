@@ -2,12 +2,17 @@ package com.sikoramarek.gameOfLife.controller;
 
 import com.sikoramarek.gameOfLife.common.GameConfig;
 import com.sikoramarek.gameOfLife.common.Logger;
+import com.sikoramarek.gameOfLife.common.SharedResources;
 import com.sikoramarek.gameOfLife.model.Model;
 import com.sikoramarek.gameOfLife.view.JavaFXView;
 import com.sikoramarek.gameOfLife.view.MenuAction;
 import javafx.application.Platform;
+import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+
+import java.util.LinkedList;
+import java.util.List;
 
 public class Controller implements Runnable{
 
@@ -103,13 +108,17 @@ public class Controller implements Runnable{
 					}
 					break;
 				case PAUSED:
-					try {
-						wait(5);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+					checkInput();
+					synchronized (this){
+						try {
+							wait(5);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
 					}
 					break;
 				case RUNNING:
+					checkInput();
 					if (modelStage.isShowing()){
 						if(timing.getUpdate()){
 							view.refresh(model.nextGenerationBoard());
@@ -118,6 +127,29 @@ public class Controller implements Runnable{
 						gameState = GameState.MENU;
 					}
 					break;
+			}
+		}
+	}
+
+	private void checkInput() {
+		if(!SharedResources.positions.isEmpty()){
+			model.changeOnPositions(SharedResources.positions);
+			SharedResources.positions.clear();
+		}
+		LinkedList<KeyCode> keyboardInputs = SharedResources.getKeyboardInput();
+		if(!keyboardInputs.isEmpty()){
+			while (!keyboardInputs.isEmpty()){
+				KeyCode key = keyboardInputs.pop();
+				switch (key){
+					case P:
+						if (gameState == GameState.RUNNING){
+							gameState = GameState.PAUSED;
+						}else
+							if (gameState == GameState.PAUSED){
+								gameState = GameState.RUNNING;
+							}
+
+				}
 			}
 		}
 	}

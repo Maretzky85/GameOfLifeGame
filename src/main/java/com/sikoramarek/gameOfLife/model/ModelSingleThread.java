@@ -1,6 +1,7 @@
 package com.sikoramarek.gameOfLife.model;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 
 public class ModelSingleThread implements Model {
 
@@ -136,6 +137,12 @@ public class ModelSingleThread implements Model {
 				success = true;
 		}
 		return success;
+	}
+
+	@Override
+	public boolean changeOnPositions(LinkedList<int[]> array) {
+		array.forEach(ints -> changeOnPosition(ints[0], ints[1]));
+		return true;
 	}
 
 	@Override

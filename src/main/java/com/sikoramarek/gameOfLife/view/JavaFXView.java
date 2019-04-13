@@ -1,11 +1,14 @@
 package com.sikoramarek.gameOfLife.view;
 
 import com.sikoramarek.gameOfLife.common.Logger;
+import com.sikoramarek.gameOfLife.common.SharedResources;
 import com.sikoramarek.gameOfLife.model.Dot;
 
 import javafx.application.Platform;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -30,6 +33,8 @@ public class JavaFXView implements ViewInterface{
 	private boolean ongoingUpdateFromView = false;
 	private int droppedFrames = 0;
 	private int renderedFrames = 0;
+	private int mouseY = 0;
+	private int mouseX = 0;
 
 
 	public JavaFXView() {
@@ -69,8 +74,18 @@ public class JavaFXView implements ViewInterface{
 	public void viewInit(int X_SIZE, int Y_SIZE){
 		Logger.log("Initialising Scene.", this);
 		initGrid(X_SIZE, Y_SIZE);
+		gameScene.setOnKeyPressed(this::handleKeyboard);
+		gameScene.setOnMouseReleased(this::handleMouse);
+		gameScene.setOnMouseMoved(this::mouseMoveHandler);
 		Logger.log("Done.", this);
 
+	}
+
+	private void mouseMoveHandler(MouseEvent mouseEvent) {
+		double mouseXpos = mouseEvent.getSceneX();
+		double mouseYpos = mouseEvent.getSceneY();
+		mouseX = (int) (mouseXpos/viewRectangleTable[0][0].getWidth());
+		mouseY = (int) (mouseYpos/viewRectangleTable[0][0].getHeight());
 	}
 
 	private void initGrid(int X_SIZE, int Y_SIZE){
@@ -130,12 +145,12 @@ public class JavaFXView implements ViewInterface{
 				Rectangle rectangle = (Rectangle) event.
 						getPickResult().
 						getIntersectedNode();
-				if (rectangle.getFill().equals(Color.WHITE)) {
+				if (rectangle.getFill().equals(Color.BLACK)) {
 					rectangle.
 							setFill(Color.RED);
 				} else {
 					rectangle.
-							setFill(Color.WHITE);
+							setFill(Color.BLACK);
 				}
 			}
 			ongoingUpdateFromView = false;
@@ -166,9 +181,18 @@ public class JavaFXView implements ViewInterface{
 						for (int j = 0; j < viewRectangleTable[0].length; j++) {
 							Rectangle rectangle = viewRectangleTable[i][j];
 							if (board[i][j] == Dot.ALIVE) {
-								rectangle.setFill(Color.RED);
+								if(mouseX == j&& mouseY == i){
+									rectangle.setFill(Color.FIREBRICK);
+								}else{
+									rectangle.setFill(Color.RED);
+								}
+
 							} else {
-								rectangle.setFill(Color.BLACK);
+								if(mouseX == j&& mouseY == i){
+									rectangle.setFill(Color.MIDNIGHTBLUE);
+								}else{
+									rectangle.setFill(Color.BLACK);
+								}
 							}
 						}
 					}
@@ -201,13 +225,25 @@ public class JavaFXView implements ViewInterface{
 	}
 
 	public void handleKeyboard(KeyEvent event) {
-
+		SharedResources.addKeyboardInput(event.getCode());
 	}
 
 	public void handleMouse(MouseEvent me) {
+		Node node = me.getPickResult().getIntersectedNode();
+
 		if (me.getEventType().equals(MOUSE_RELEASED)) {
 			if (me.getButton() == MouseButton.PRIMARY) {
+				if(node != null && node instanceof Rectangle){
+					Rectangle rectangle =(Rectangle) me.getPickResult().getIntersectedNode();
+					SharedResources.positions.add(new int[]{
+							(int) (rectangle.getX()/rectangle.getWidth()),
+							(int) (rectangle.getY()/rectangle.getHeight())
+					});
+				}
 				updateViewOnPos(me);
+			}
+			if (me.getButton() == MouseButton.SECONDARY){
+				SharedResources.addKeyboardInput(KeyCode.P);
 			}
 		}
 	}
