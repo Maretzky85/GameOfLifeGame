@@ -179,6 +179,7 @@ public class Controller implements Runnable{
 					checkInput();
 					if (modelStage.isShowing()){
 						if(timing.getUpdate()){
+							System.out.println(generation + "  "+model.getCurrentGeneration());
 							if (generation >= model.getCurrentGeneration()){
 								model.nextGenerationBoard();
 							}
