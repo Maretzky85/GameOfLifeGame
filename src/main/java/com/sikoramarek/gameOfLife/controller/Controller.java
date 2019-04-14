@@ -223,7 +223,6 @@ public class Controller implements Runnable{
 		board.put(MessageType.BOARD, model.getCurrentBoard());
 		client.send(board);
 		client.send(iteration);
-		Logger.log("sent board data", this);
 	}
 
 	private boolean negotiateConfig() {
@@ -324,7 +323,6 @@ public class Controller implements Runnable{
 		if (data.get(MessageType.class) == MessageType.BOARD){
 			generation++;
 			secondPlayerBoard = (Dot[][]) data.get(MessageType.BOARD);
-			Logger.log("Board", this);
 		}else
 		if (data.get(MessageType.class) == MessageType.MESSAGE){
 			Logger.log("Message", this);
