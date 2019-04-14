@@ -35,6 +35,7 @@ public class Controller implements Runnable{
 	private GameConfig config;
 	private Dot[][] secondPlayerBoard;
 	private Integer generation = -1;
+	private long responseTime;
 
 	public Controller(Stage stage){
 		primaryStage = stage;
@@ -185,20 +186,14 @@ public class Controller implements Runnable{
 				case MULTIPLAYER:
 					handleServerResponse();
 					checkInput();
+					if (System.currentTimeMillis() - responseTime > 2000){
+						sendCurrentBoard();
+					}
 					if (modelStage.isShowing()){
 						if(timing.getUpdate()){
 							if (generation >= model.getCurrentGeneration()){
 								model.nextGenerationBoard();
-								HashMap iteration = new HashMap();
-								iteration.put(Request.class, Request.PUT);
-								iteration.put(MessageType.class, MessageType.ITERATION);
-								iteration.put(MessageType.ITERATION, model.getCurrentGeneration());
-								HashMap board = new HashMap();
-								board.put(Request.class, Request.PUT);
-								board.put(MessageType.class, MessageType.BOARD);
-								board.put(MessageType.BOARD, model.getCurrentBoard());
-								client.send(board);
-								client.send(iteration);
+								sendCurrentBoard();
 							}
 							view.refresh(model.getCurrentBoard(), secondPlayerBoard);
 						}else {
@@ -214,6 +209,20 @@ public class Controller implements Runnable{
 					break;
 			}
 		}
+	}
+
+	private void sendCurrentBoard(){
+		HashMap iteration = new HashMap();
+		iteration.put(Request.class, Request.PUT);
+		iteration.put(MessageType.class, MessageType.ITERATION);
+		iteration.put(MessageType.ITERATION, model.getCurrentGeneration());
+		HashMap board = new HashMap();
+		board.put(Request.class, Request.PUT);
+		board.put(MessageType.class, MessageType.BOARD);
+		board.put(MessageType.BOARD, model.getCurrentBoard());
+		client.send(board);
+		client.send(iteration);
+		Logger.log("sent board data", this);
 	}
 
 	private boolean negotiateConfig() {
@@ -277,6 +286,7 @@ public class Controller implements Runnable{
 	}
 
 	private void handleGetRequest(HashMap data) {
+		responseTime = System.currentTimeMillis();
 		HashMap response = new HashMap();
 		response.put(Request.class, Request.PUT);
 		if (data.get(MessageType.class) == MessageType.ITERATION){
@@ -305,18 +315,27 @@ public class Controller implements Runnable{
 	}
 
 	private void handlePutRequest(HashMap data) {
+		responseTime = System.currentTimeMillis();
 		if (data.get(MessageType.class) == MessageType.ITERATION){
 			generation = (Integer) data.get(MessageType.ITERATION);
-		}
+			Logger.log("generation", this);
+		}else
 		if (data.get(MessageType.class) == MessageType.BOARD){
 			generation++;
 			secondPlayerBoard = (Dot[][]) data.get(MessageType.BOARD);
-		}
+			Logger.log("Board", this);
+		}else
 		if (data.get(MessageType.class) == MessageType.MESSAGE){
+			Logger.log("Message", this);
 			Logger.log(data.get(MessageType.MESSAGE).toString(), this);
-		}
+		}else
 		if (data.get(MessageType.class) == MessageType.CONFIG){
 			Logger.log("Config?", this);
+		}if ((data.get(MessageType.class) == MessageType.PONG)){
+
+		}
+		else{
+			Logger.log("WTF"+data.toString(), this);
 		}
 	}
 

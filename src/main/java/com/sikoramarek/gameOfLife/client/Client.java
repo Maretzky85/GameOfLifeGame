@@ -9,6 +9,7 @@ import java.io.*;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Vector;
 
 public class Client implements Runnable, Connection{
 
@@ -23,7 +24,7 @@ public class Client implements Runnable, Connection{
 	private boolean connecting =false;
 
 	private LinkedList<HashMap> receivedList;
-	private LinkedList<HashMap> objectsToSendList;
+	private Vector<HashMap> objectsToSendList;
 
 	private long pingSendTime;
 
@@ -113,7 +114,7 @@ public class Client implements Runnable, Connection{
 				bufferedInputStream = new BufferedInputStream(serviceSocket.getInputStream());
 				inputStream = new ObjectInputStream(bufferedInputStream);
 				receivedList = new LinkedList<>();
-				objectsToSendList = new LinkedList<>();
+				objectsToSendList = new Vector<>();
 				connected = true;
 				Logger.log("Connected", this);
 			} catch (IOException e) {
@@ -162,7 +163,8 @@ public class Client implements Runnable, Connection{
 				}
 			}
 			while (!objectsToSendList.isEmpty()){
-				sendToServer(objectsToSendList.pop());
+				sendToServer(objectsToSendList.get(0));
+				objectsToSendList.remove(0);
 			}
 		} catch (IOException | ClassNotFoundException e) {
 			e.printStackTrace();
