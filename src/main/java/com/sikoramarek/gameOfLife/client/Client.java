@@ -1,11 +1,13 @@
 package com.sikoramarek.gameOfLife.client;
 
 import com.sikoramarek.gameOfLife.common.Logger;
-import com.sikoramarek.gameOfLife.model.Dot;
+import com.sikoramarek.gameOfLife.common.MessageType;
+import com.sikoramarek.gameOfLife.common.Request;
 import javafx.application.Platform;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class Client implements Runnable, Connection{
@@ -17,14 +19,15 @@ public class Client implements Runnable, Connection{
 	private BufferedInputStream bufferedInputStream;
 	private ObjectOutputStream outputStream;
 
-	String host = "192.168.8.144";
-
 	private boolean connected = false;
 	private boolean connecting =false;
 
-	private LinkedList<String> messagesToSend;
-	private LinkedList received;
+	private LinkedList<HashMap> receivedList;
+	private LinkedList<HashMap> objectsToSendList;
 
+	private long pingSendTime;
+
+	String host = "192.168.8.144";
 
 	private Client(){
 		Logger.log("Client created", this);
@@ -37,6 +40,7 @@ public class Client implements Runnable, Connection{
 		return instance;
 	}
 
+	@Override
 	public void connect(){
 		connecting = true;
 		if (connected){
@@ -53,7 +57,11 @@ public class Client implements Runnable, Connection{
 	}
 
 	@Override
-	public void send(Object object) {
+	public synchronized void send(HashMap data) {
+		objectsToSendList.add(data);
+	}
+
+	private void sendToServer(Object object){
 		try {
 			outputStream.reset();
 			outputStream.writeObject(object);
@@ -61,12 +69,11 @@ public class Client implements Runnable, Connection{
 		} catch (IOException e) {
 			Logger.error(e.getMessage(), this);
 		}
-
 	}
 
 	@Override
-	public LinkedList getReceived() {
-		return received;
+	public synchronized LinkedList<HashMap> getReceivedList() {
+		return receivedList;
 	}
 
 	@Override
@@ -83,6 +90,16 @@ public class Client implements Runnable, Connection{
 	}
 
 	public boolean isConnected() {
+		if (connecting){
+			synchronized (this){
+				try {
+					Logger.log("waiting", this);
+					wait();
+				} catch (InterruptedException e) {
+					Logger.error(e, this);
+				}
+			}
+		}
 		return connected;
 	}
 
@@ -95,8 +112,8 @@ public class Client implements Runnable, Connection{
 				outputStream = new ObjectOutputStream(serviceSocket.getOutputStream());
 				bufferedInputStream = new BufferedInputStream(serviceSocket.getInputStream());
 				inputStream = new ObjectInputStream(bufferedInputStream);
-				messagesToSend = new LinkedList<>();
-				received = new LinkedList();
+				receivedList = new LinkedList<>();
+				objectsToSendList = new LinkedList<>();
 				connected = true;
 				Logger.log("Connected", this);
 			} catch (IOException e) {
@@ -123,21 +140,29 @@ public class Client implements Runnable, Connection{
 
 	@Override
 	public void run() {
-		//			serviceSocket = new Socket("217.182.73.80", 65432);
 		createConnection();
 		while(connected){
-			while (messagesToSend.size() > 0){
-				send(messagesToSend.removeFirst());
-			}
-			handleResponse();
+			handleCommunication();
 		}
 		disconnect();
 	}
 
-	private void handleResponse() {
+	private void handleCommunication() {
 		try{
 			while (bufferedInputStream.available() > 0){
-				received.add(inputStream.readObject());
+				Object data = inputStream.readObject();
+				if (data instanceof HashMap){
+					receivedList.add((HashMap) data);
+					if (((HashMap) data).containsValue(MessageType.PONG)){
+						long pongResponseTime = System.currentTimeMillis();
+						Logger.log("ping: "+(pongResponseTime-pingSendTime), this);
+					}
+				}else{
+					Logger.error("Wrong data format "+data.toString(), this);
+				}
+			}
+			while (!objectsToSendList.isEmpty()){
+				sendToServer(objectsToSendList.pop());
 			}
 		} catch (IOException | ClassNotFoundException e) {
 			e.printStackTrace();
@@ -149,6 +174,14 @@ public class Client implements Runnable, Connection{
 
 	public boolean isConnecting() {
 		return connecting;
+	}
+
+	public void checkPing() {
+		HashMap data = new HashMap();
+		data.put(Request.class, Request.GET);
+		data.put(MessageType.class, MessageType.PING);
+		send(data);
+		pingSendTime = System.currentTimeMillis();
 	}
 }
 

@@ -1,14 +1,16 @@
 package com.sikoramarek.gameOfLife.client;
 
+import java.util.HashMap;
+
 public interface Connection {
 
 	void connect();
 
 	void connect(String host);
 
-	void send(Object object);
+	void send(HashMap data);
 
-	Object getReceived();
+	Object getReceivedList();
 
 	void disconnect();
 

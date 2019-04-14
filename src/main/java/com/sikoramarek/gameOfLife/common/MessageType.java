@@ -1,5 +1,5 @@
 package com.sikoramarek.gameOfLife.common;
 
 public enum MessageType {
-	CONFIG, BOARD
+	CONFIG, ITERATION, BOARD, MESSAGE, PING, PONG
 }

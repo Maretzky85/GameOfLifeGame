@@ -161,6 +161,7 @@ public class Controller implements Runnable{
 							}
 						}
 					}
+					client.checkPing();
 					if (client.isConnected()){
 						gameState = GameState.MULTIPLAYER_CONFIG;
 					}
@@ -188,15 +189,19 @@ public class Controller implements Runnable{
 						if(timing.getUpdate()){
 							if (generation >= model.getCurrentGeneration()){
 								model.nextGenerationBoard();
+								HashMap iteration = new HashMap();
+								iteration.put(Request.class, Request.PUT);
+								iteration.put(MessageType.class, MessageType.ITERATION);
+								iteration.put(MessageType.ITERATION, model.getCurrentGeneration());
+								HashMap board = new HashMap();
+								board.put(Request.class, Request.PUT);
+								board.put(MessageType.class, MessageType.BOARD);
+								board.put(MessageType.BOARD, model.getCurrentBoard());
+								client.send(board);
+								client.send(iteration);
 							}
 							view.refresh(model.getCurrentBoard(), secondPlayerBoard);
 						}else {
-							HashMap data = new HashMap<Integer, Dot[][]>();
-							data.put(model.getCurrentGeneration(), model.getCurrentBoard());
-							client.send(data);
-							Dot[][] board = model.getCurrentBoard();
-							client.send(board);
-
 							synchronized (this){
 								try {
 									wait(5);
@@ -216,7 +221,7 @@ public class Controller implements Runnable{
 		if (configToSend == this.config){
 			return true;
 		}
-		LinkedList received = client.getReceived();
+		LinkedList received = client.getReceivedList();
 		if (!received.isEmpty()){
 			Object response = received.pop();
 			if (response instanceof HashMap){
@@ -240,8 +245,11 @@ public class Controller implements Runnable{
 					if (data.get(MessageType.class) ==  MessageType.CONFIG){
 						this.config = (GameConfig) data.get(MessageType.CONFIG);
 						Logger.log("Config Loaded", this);
+						return true;
 					}
 				}
+			}else{
+				Logger.error("Communication error", this);
 			}
 		}
 
@@ -254,31 +262,57 @@ public class Controller implements Runnable{
 		return false;
 	}
 
-	private boolean handleServerResponse() {
-		LinkedList received = client.getReceived();
+	private void handleServerResponse() {
+		LinkedList<HashMap> received = client.getReceivedList();
 		while(!received.isEmpty()){
-			Object object = received.pop();
-			if (object instanceof GameConfig){
-				config = (GameConfig) object;
-				return true;
-			}else
-			if (object instanceof int[]){
-				int[] position = (int[]) object;
-				model.changeOnPosition(position[0], position[1]);
-			}else
-			if (object instanceof Dot[][]){
-				secondPlayerBoard = (Dot[][]) object;
-			}else
-			if (object instanceof Integer){
-				generation = (Integer) object;
-			}else
-			if (object instanceof String){
-				Logger.log((String) object, this);
+			HashMap data = received.pop();
+			if (data.get(Request.class) == Request.PUT){
+				handlePutRequest(data);
+			}
+			if (data.get(Request.class) == Request.GET){
+				handleGetRequest(data);
 			}
 
 		}
-		received.clear();
-		return false;
+	}
+
+	private void handleGetRequest(HashMap data) {
+		HashMap response = new HashMap();
+		response.put(Request.class, Request.PUT);
+		if (data.get(MessageType.class) == MessageType.ITERATION){
+			response.put(MessageType.class, MessageType.ITERATION);
+			response.put(MessageType.ITERATION, model.getCurrentGeneration());
+		}else
+		if (data.get(MessageType.class) == MessageType.BOARD){
+			response.put(MessageType.class, MessageType.BOARD);
+			response.put(MessageType.BOARD, model.getCurrentBoard());
+		}else
+		if (data.get(MessageType.class) == MessageType.MESSAGE){
+			Logger.error("WTF, message in get request?", this);
+		}else
+		if (data.get(MessageType.class) == MessageType.CONFIG){
+			response.put(MessageType.class, MessageType.CONFIG);
+			response.put(MessageType.CONFIG, config);
+		}else{
+			Logger.error("Wrong format", this);
+			return;
+		}
+		client.send(response);
+	}
+
+	private void handlePutRequest(HashMap data) {
+		if (data.get(MessageType.class) == MessageType.ITERATION){
+			generation = (Integer) data.get(MessageType.ITERATION);
+		}
+		if (data.get(MessageType.class) == MessageType.BOARD){
+			secondPlayerBoard = (Dot[][]) data.get(MessageType.BOARD);
+		}
+		if (data.get(MessageType.class) == MessageType.MESSAGE){
+			Logger.log(data.get(MessageType.MESSAGE).toString(), this);
+		}
+		if (data.get(MessageType.class) == MessageType.CONFIG){
+			Logger.log("Config?", this);
+		}
 	}
 
 	private void checkInput() {
@@ -315,6 +349,10 @@ public class Controller implements Runnable{
 		}
 	}
 
+	@Override
+	public String toString(){
+		return "Controller";
+	}
 	int[][] positions = new int[][]{
 			{8,1},
 			{7,1},
