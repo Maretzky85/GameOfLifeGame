@@ -176,7 +176,7 @@ public class Controller implements Runnable{
 						}
 						synchronized (this){
 							try {
-								wait(1000);
+								wait(20);
 							} catch (InterruptedException e) {
 								Logger.error(e, this);
 							}
@@ -331,7 +331,7 @@ public class Controller implements Runnable{
 		}else
 		if (data.get(MessageType.class) == MessageType.CONFIG){
 			Logger.log("Config?", this);
-		}if ((data.get(MessageType.class) == MessageType.PONG)){
+		}else if ((data.get(MessageType.class) == MessageType.PONG)){
 
 		}
 		else{
