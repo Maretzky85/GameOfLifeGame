@@ -188,6 +188,7 @@ public class Controller implements Runnable{
 					checkInput();
 					if (System.currentTimeMillis() - responseTime > 2000){
 						sendCurrentBoard();
+						responseTime = System.currentTimeMillis();
 					}
 					if (modelStage.isShowing()){
 						if(timing.getUpdate()){
