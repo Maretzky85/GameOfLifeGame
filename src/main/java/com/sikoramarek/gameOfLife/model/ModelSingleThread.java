@@ -43,8 +43,8 @@ public class ModelSingleThread implements Model {
 	public Dot[][] nextGenerationBoard() {
 		Dot[][] currentBoard = boardsSwapped ? boards[1]:boards[0];
 		Dot[][] nextGenBoard = boardsSwapped ? boards[0]:boards[1];
-		for (int y = 0; y < currentBoard.length-1; y++) {
-			for (int x = 0; x < currentBoard[x].length-1; x++) {
+		for (int y = 0; y < currentBoard.length; y++) {
+			for (int x = 0; x < currentBoard[0].length; x++) {
 				int aliveNeighbors = getAliveNeighbors(x, y);
 
 				if (currentBoard[y][x] == Dot.ALIVE) {
@@ -96,11 +96,12 @@ public class ModelSingleThread implements Model {
 						continue;
 					}
 				}
-				if (
-						!(currentX == x && currentY == y) &&
-								currentBoard[currentY][currentX] != Dot.DEAD
-				)
+
+
+				if (!(currentX == x && currentY == y) &&
+								currentBoard[currentY][currentX] == Dot.ALIVE){
 					neighbors++;
+				}
 			}
 
 		}

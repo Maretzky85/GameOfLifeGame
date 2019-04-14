@@ -58,12 +58,13 @@ public class JavaFXView implements ViewInterface{
 					rectangle.setX(rectangleWidth * j);
 					rectangle.setHeight(rectangleHeight);
 					rectangle.setWidth(rectangleWidth);
-
-					Rectangle rectangle2 = viewRectangleTableSecondPlayer[i][j];
-					rectangle2.setY(rectangleHeight * i);
-					rectangle2.setX(offset + rectangleWidth * j);
-					rectangle2.setHeight(rectangleHeight);
-					rectangle2.setWidth(rectangleWidth);
+					if(multi){
+						Rectangle rectangle2 = viewRectangleTableSecondPlayer[i][j];
+						rectangle2.setY(rectangleHeight * i);
+						rectangle2.setX(offset + rectangleWidth * j);
+						rectangle2.setHeight(rectangleHeight);
+						rectangle2.setWidth(rectangleWidth);
+					}
 				}
 			}
 		}

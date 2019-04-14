@@ -28,7 +28,8 @@ public class Client implements Runnable, Connection{
 
 	private long pingSendTime;
 
-	String host = "192.168.8.144";
+//	String host = "192.168.8.144";
+	String host = "217.182.73.80";
 
 	private Client(){
 		Logger.log("Client created", this);
