@@ -2,6 +2,7 @@ package com.sikoramarek.gameOfLife.client;
 
 import com.sikoramarek.gameOfLife.common.Logger;
 import com.sikoramarek.gameOfLife.model.Dot;
+import javafx.application.Platform;
 
 import java.io.*;
 import java.net.Socket;
@@ -39,9 +40,7 @@ public class Client implements Runnable, Connection{
 	public void connect(){
 		connecting = true;
 		if (connected){
-			Logger.error("Reconnecting", this);
-			disconnect();
-			new Thread(this).start();
+			Logger.error("Already connected", this);
 		}else{
 			new Thread(this).start();
 		}
@@ -140,10 +139,10 @@ public class Client implements Runnable, Connection{
 			while (bufferedInputStream.available() > 0){
 				received.add(inputStream.readObject());
 			}
-		} catch (IOException e) {
+		} catch (IOException | ClassNotFoundException e) {
 			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
+			disconnect();
+			Platform.exit();
 		}
 
 	}

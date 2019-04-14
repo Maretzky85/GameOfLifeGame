@@ -1,10 +1,7 @@
 package com.sikoramarek.gameOfLife.controller;
 
 import com.sikoramarek.gameOfLife.client.Client;
-import com.sikoramarek.gameOfLife.common.GameConfig;
-import com.sikoramarek.gameOfLife.common.GameState;
-import com.sikoramarek.gameOfLife.common.Logger;
-import com.sikoramarek.gameOfLife.common.SharedResources;
+import com.sikoramarek.gameOfLife.common.*;
 import com.sikoramarek.gameOfLife.model.Dot;
 import com.sikoramarek.gameOfLife.model.Model;
 import com.sikoramarek.gameOfLife.view.JavaFXView;
@@ -14,6 +11,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class Controller implements Runnable{
@@ -28,7 +26,7 @@ public class Controller implements Runnable{
 
 	private TimingInterface timing;
 
-	private Client multiplayerSync;
+	private Client client;
 
 	Stage primaryStage;
 
@@ -65,7 +63,7 @@ public class Controller implements Runnable{
 					model = resourceManager.getNewBoard(config.xSize,config.ySize);
 					model.changeOnPositions(positions);
 					view = resourceManager.getNewView();
-					if (multiplayerSync != null){
+					if (client != null){
 						view.setMulti(true);
 					}
 					view.viewInit(config.xSize, config.ySize);
@@ -145,35 +143,42 @@ public class Controller implements Runnable{
 						gameState = GameState.MENU;
 					}
 					break;
-				case MULTIPLAYER_CONFIG:
-					multiplayerSync = Client.getClient();
-					multiplayerSync.connect();
-					while (multiplayerSync.isConnecting()){
+				case MULTIPLAYER_CONNECTING:
+					if (client == null){
+						Logger.log("NewClient", this);
+						client = Client.getClient();
+					}
+					if (!client.isConnecting()){
+						Logger.log("Trying to connect", this);
+						client.connect();
+					}
+					while (client.isConnecting()){
 						synchronized (this){
 							try {
-								wait(5);
+								wait(50);
 							} catch (InterruptedException e) {
 								Logger.error(e, this);
 							}
 						}
 					}
-					if(!multiplayerSync.isConnected()){
-						gameState = GameState.MENU;
+					if (client.isConnected()){
+						gameState = GameState.MULTIPLAYER_CONFIG;
+					}
+				case MULTIPLAYER_CONFIG:
+					if(!client.isConnected()){
+						gameState = GameState.MULTIPLAYER_CONNECTING;
 					}else {
-						config = resourceManager.getMenu().getConfig();
-						multiplayerSync.send(config);
 						multiplayer = true;
-						while (!handleServerResponse()){
-							multiplayerSync.send(config);
-							synchronized (this){
-								try {
-									wait(50);
-								} catch (InterruptedException e) {
-									Logger.error(e, this);
-								}
+						if (negotiateConfig()){
+							gameState = GameState.LOADING;
+						}
+						synchronized (this){
+							try {
+								wait(1000);
+							} catch (InterruptedException e) {
+								Logger.error(e, this);
 							}
 						}
-						gameState = GameState.LOADING;
 					}
 					break;
 				case MULTIPLAYER:
@@ -186,13 +191,15 @@ public class Controller implements Runnable{
 							}
 							view.refresh(model.getCurrentBoard(), secondPlayerBoard);
 						}else {
-							multiplayerSync.send(model.getCurrentGeneration());
+							HashMap data = new HashMap<Integer, Dot[][]>();
+							data.put(model.getCurrentGeneration(), model.getCurrentBoard());
+							client.send(data);
 							Dot[][] board = model.getCurrentBoard();
-							multiplayerSync.send(board);
+							client.send(board);
 
 							synchronized (this){
 								try {
-									wait(50);
+									wait(5);
 								} catch (InterruptedException e) {
 									Logger.error(e, this);
 								}
@@ -204,8 +211,51 @@ public class Controller implements Runnable{
 		}
 	}
 
+	private boolean negotiateConfig() {
+		GameConfig configToSend = resourceManager.getMenu().getConfig();
+		if (configToSend == this.config){
+			return true;
+		}
+		LinkedList received = client.getReceived();
+		if (!received.isEmpty()){
+			Object response = received.pop();
+			if (response instanceof HashMap){
+				HashMap data = (HashMap) response;
+				if (data.get(Request.class) == Request.GET){
+					if (data.get(MessageType.class) == MessageType.CONFIG){
+						if (data.get(Response.class) == Response.ACCEPTED){
+							this.config = configToSend;
+							Logger.log("Config Accepted", this);
+							return true;
+						}else {
+							HashMap request = new HashMap();
+							request.put(Request.class, Request.GET);
+							request.put(MessageType.class, MessageType.CONFIG);
+							client.send(request);
+							Logger.log("Request arena config", this);
+						}
+					}
+				}else
+				if (data.get(Request.class) == Request.PUT){
+					if (data.get(MessageType.class) ==  MessageType.CONFIG){
+						this.config = (GameConfig) data.get(MessageType.CONFIG);
+						Logger.log("Config Loaded", this);
+					}
+				}
+			}
+		}
+
+		HashMap config = new HashMap();
+		config.put(Request.class, Request.PUT);
+		config.put(MessageType.class, MessageType.CONFIG);
+		config.put(MessageType.CONFIG, configToSend);
+		client.send(config);
+		Logger.log("Sent Config", this);
+		return false;
+	}
+
 	private boolean handleServerResponse() {
-		LinkedList received = multiplayerSync.getReceived();
+		LinkedList received = client.getReceived();
 		while(!received.isEmpty()){
 			Object object = received.pop();
 			if (object instanceof GameConfig){
@@ -260,7 +310,7 @@ public class Controller implements Runnable{
 				gameState = GameState.LOADING;
 				break;
 			case CONNECT:
-				gameState = GameState.MULTIPLAYER_CONFIG;
+				gameState = GameState.MULTIPLAYER_CONNECTING;
 				break;
 		}
 	}
