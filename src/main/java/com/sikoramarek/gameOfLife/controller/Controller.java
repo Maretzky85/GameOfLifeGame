@@ -291,8 +291,12 @@ public class Controller implements Runnable{
 			Logger.error("WTF, message in get request?", this);
 		}else
 		if (data.get(MessageType.class) == MessageType.CONFIG){
+			if (data.containsKey(Response.class)){
+				return;
+			}
 			response.put(MessageType.class, MessageType.CONFIG);
 			response.put(MessageType.CONFIG, config);
+			Logger.log("sending config", this);
 		}else{
 			Logger.error("Wrong format", this);
 			return;
@@ -305,6 +309,7 @@ public class Controller implements Runnable{
 			generation = (Integer) data.get(MessageType.ITERATION);
 		}
 		if (data.get(MessageType.class) == MessageType.BOARD){
+			generation++;
 			secondPlayerBoard = (Dot[][]) data.get(MessageType.BOARD);
 		}
 		if (data.get(MessageType.class) == MessageType.MESSAGE){
