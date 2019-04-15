@@ -188,12 +188,13 @@ public class Controller implements Runnable{
 					handleServerResponse();
 					checkInput();
 					if (System.currentTimeMillis() - responseTime > 2000){
-						sendCurrentBoard();
+						sendGetBoard();
 						responseTime = System.currentTimeMillis();
 					}
 					if (modelStage.isShowing()){
 						if(update){
 							if (generation >= model.getCurrentGeneration()){
+								System.out.println(generation-model.getCurrentGeneration());
 								model.nextGenerationBoard();
 								sendCurrentBoard();
 								update = false;
@@ -206,6 +207,12 @@ public class Controller implements Runnable{
 					break;
 			}
 		}
+	}
+	private void sendGetBoard(){
+		HashMap request = new HashMap();
+		request.put(Request.class, Request.GET);
+		request.put(MessageType.class, MessageType.BOARD);
+		client.send(request);
 	}
 
 	private void sendCurrentBoard(){
@@ -317,8 +324,10 @@ public class Controller implements Runnable{
 			Logger.log("generation", this);
 		}else
 		if (data.get(MessageType.class) == MessageType.BOARD){
-			generation++;
-			secondPlayerBoard = (Dot[][]) data.get(MessageType.BOARD);
+			Dot[][] board = (Dot[][]) data.get(MessageType.BOARD);
+			if (board != null) {
+				secondPlayerBoard = board;
+			}
 		}else
 		if (data.get(MessageType.class) == MessageType.MESSAGE){
 			Logger.log("Message", this);
