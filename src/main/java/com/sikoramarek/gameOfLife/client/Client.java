@@ -17,6 +17,7 @@ public class Client implements Runnable, Connection{
 	private Socket serviceSocket;
 
 	private ObjectInputStream inputStream;
+	private BufferedInputStream bufferedInputStream;
 	private ObjectOutputStream outputStream;
 
 	private boolean connected = false;
@@ -74,6 +75,15 @@ public class Client implements Runnable, Connection{
 
 	@Override
 	public synchronized LinkedList<HashMap> getReceivedList() {
+		if (receivedList.isEmpty()){
+			synchronized (this){
+				try {
+					wait(30);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 		return receivedList;
 	}
 
@@ -111,7 +121,8 @@ public class Client implements Runnable, Connection{
 			try {
 				serviceSocket = new Socket(host, 65432);
 				outputStream = new ObjectOutputStream(serviceSocket.getOutputStream());
-				inputStream = new ObjectInputStream(serviceSocket.getInputStream());
+				bufferedInputStream = new BufferedInputStream(serviceSocket.getInputStream());
+				inputStream = new ObjectInputStream(bufferedInputStream);
 				receivedList = new LinkedList<>();
 				objectsToSendList = new Vector<>();
 				connected = true;
@@ -149,15 +160,17 @@ public class Client implements Runnable, Connection{
 
 	private void handleCommunication() {
 		try{
-			Object data = inputStream.readObject();
-			if (data instanceof HashMap){
-				receivedList.add((HashMap) data);
-				if (((HashMap) data).containsValue(MessageType.PONG)){
-					long pongResponseTime = System.currentTimeMillis();
-					Logger.log("ping: "+(pongResponseTime-pingSendTime), this);
+			while (bufferedInputStream.available() > 0){
+				Object data = inputStream.readObject();
+				if (data instanceof HashMap){
+					receivedList.add((HashMap) data);
+					if (((HashMap) data).containsValue(MessageType.PONG)){
+						long pongResponseTime = System.currentTimeMillis();
+						Logger.log("ping: "+(pongResponseTime-pingSendTime), this);
+					}
+				}else{
+					Logger.error("Wrong data format "+data.toString(), this);
 				}
-			}else{
-				Logger.error("Wrong data format "+data.toString(), this);
 			}
 			while (!objectsToSendList.isEmpty()){
 				sendToServer(objectsToSendList.get(0));
