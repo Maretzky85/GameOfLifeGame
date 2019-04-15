@@ -320,8 +320,11 @@ public class Controller implements Runnable{
 	private void handlePutRequest(HashMap data) {
 		responseTime = System.currentTimeMillis();
 		if (data.get(MessageType.class) == MessageType.ITERATION){
-			generation = (Integer) data.get(MessageType.ITERATION);
-			Logger.log("generation", this);
+			Integer iteration =(Integer) data.get(MessageType.ITERATION);
+			if (iteration != null){
+				generation = iteration;
+				Logger.log("generation "+iteration+"  c: "+model.getCurrentGeneration(), this);
+			}
 		}else
 		if (data.get(MessageType.class) == MessageType.BOARD){
 			Dot[][] board = (Dot[][]) data.get(MessageType.BOARD);
