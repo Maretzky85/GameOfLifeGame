@@ -11,6 +11,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -193,12 +194,11 @@ public class Controller implements Runnable{
 					}
 					if (modelStage.isShowing()){
 						if(update){
-							if (generation >= model.getCurrentGeneration()){
-								System.out.println(generation-model.getCurrentGeneration());
+//							if (generation >= model.getCurrentGeneration()){
 								model.nextGenerationBoard();
-								sendCurrentBoard();
 								update = false;
-							}
+//							}
+							sendCurrentBoard();
 							view.refresh(model.getCurrentBoard(), secondPlayerBoard);
 						}else{
 							update = timing.getUpdate();
@@ -323,7 +323,6 @@ public class Controller implements Runnable{
 			Integer iteration =(Integer) data.get(MessageType.ITERATION);
 			if (iteration != null){
 				generation = iteration;
-				Logger.log("generation "+iteration+"  c: "+model.getCurrentGeneration(), this);
 			}
 		}else
 		if (data.get(MessageType.class) == MessageType.BOARD){
@@ -340,6 +339,10 @@ public class Controller implements Runnable{
 			Logger.log("Config?", this);
 		}else if ((data.get(MessageType.class) == MessageType.PONG)){
 
+		}else if ((data.get(MessageType.class) == MessageType.POSITION)){
+			int[] position = (int[]) data.get(MessageType.POSITION);
+			System.out.println("position");
+			model.changeOnPosition(position[0], position[1]);
 		}
 		else{
 			Logger.log("WTF"+data.toString(), this);
@@ -348,6 +351,17 @@ public class Controller implements Runnable{
 
 	private void checkInput() {
 		if(!SharedResources.positions.isEmpty()){
+			for (int[] position: SharedResources.positions){
+				System.out.println(position[0]);
+				if (position[0] > model.getCurrentBoard()[0].length){
+					HashMap data = new HashMap();
+					data.put(Request.class, Request.PUT);
+					data.put(MessageType.class, MessageType.POSITION);
+					Integer[] positionToSend = new Integer[]{position[0], position[1]};
+					data.put(MessageType.POSITION, (Integer[]) positionToSend);
+					client.send(data);
+				}
+			}
 			model.changeOnPositions(SharedResources.positions);
 			SharedResources.positions.clear();
 		}
