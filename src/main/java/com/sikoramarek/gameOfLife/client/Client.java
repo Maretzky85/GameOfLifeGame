@@ -75,15 +75,6 @@ public class Client implements Runnable, Connection{
 
 	@Override
 	public synchronized LinkedList<HashMap> getReceivedList() {
-		if (receivedList.isEmpty()){
-			synchronized (this){
-				try {
-					wait(30);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		}
 		return receivedList;
 	}
 

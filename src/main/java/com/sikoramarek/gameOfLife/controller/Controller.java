@@ -36,6 +36,7 @@ public class Controller implements Runnable{
 	private Dot[][] secondPlayerBoard;
 	private Integer generation = -1;
 	private long responseTime;
+	private boolean update;
 
 	public Controller(Stage stage){
 		primaryStage = stage;
@@ -191,20 +192,15 @@ public class Controller implements Runnable{
 						responseTime = System.currentTimeMillis();
 					}
 					if (modelStage.isShowing()){
-						if(timing.getUpdate()){
+						if(update){
 							if (generation >= model.getCurrentGeneration()){
 								model.nextGenerationBoard();
 								sendCurrentBoard();
+								update = false;
 							}
 							view.refresh(model.getCurrentBoard(), secondPlayerBoard);
-						}else {
-							synchronized (this){
-								try {
-									wait(5);
-								} catch (InterruptedException e) {
-									Logger.error(e, this);
-								}
-							}
+						}else{
+							update = timing.getUpdate();
 						}
 					}
 					break;

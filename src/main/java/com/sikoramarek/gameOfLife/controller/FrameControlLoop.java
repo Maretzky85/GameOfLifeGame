@@ -77,7 +77,7 @@ public class FrameControlLoop implements TimingInterface{
 		}else {
 			synchronized (this){
 				try {
-					wait();
+					wait(timeFrame - timeCounterMs);
 				} catch (InterruptedException e) {
 					Logger.error(e, this);
 				}
