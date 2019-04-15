@@ -17,7 +17,6 @@ public class Client implements Runnable, Connection{
 	private Socket serviceSocket;
 
 	private ObjectInputStream inputStream;
-	private BufferedInputStream bufferedInputStream;
 	private ObjectOutputStream outputStream;
 
 	private boolean connected = false;
@@ -28,8 +27,8 @@ public class Client implements Runnable, Connection{
 
 	private long pingSendTime;
 
-//	String host = "192.168.8.144";
-	String host = "217.182.73.80";
+	String host = "192.168.8.144";
+//	String host = "217.182.73.80";
 
 	private Client(){
 		Logger.log("Client created", this);
@@ -112,8 +111,7 @@ public class Client implements Runnable, Connection{
 			try {
 				serviceSocket = new Socket(host, 65432);
 				outputStream = new ObjectOutputStream(serviceSocket.getOutputStream());
-				bufferedInputStream = new BufferedInputStream(serviceSocket.getInputStream());
-				inputStream = new ObjectInputStream(bufferedInputStream);
+				inputStream = new ObjectInputStream(serviceSocket.getInputStream());
 				receivedList = new LinkedList<>();
 				objectsToSendList = new Vector<>();
 				connected = true;
@@ -151,17 +149,15 @@ public class Client implements Runnable, Connection{
 
 	private void handleCommunication() {
 		try{
-			while (bufferedInputStream.available() > 0){
-				Object data = inputStream.readObject();
-				if (data instanceof HashMap){
-					receivedList.add((HashMap) data);
-					if (((HashMap) data).containsValue(MessageType.PONG)){
-						long pongResponseTime = System.currentTimeMillis();
-						Logger.log("ping: "+(pongResponseTime-pingSendTime), this);
-					}
-				}else{
-					Logger.error("Wrong data format "+data.toString(), this);
+			Object data = inputStream.readObject();
+			if (data instanceof HashMap){
+				receivedList.add((HashMap) data);
+				if (((HashMap) data).containsValue(MessageType.PONG)){
+					long pongResponseTime = System.currentTimeMillis();
+					Logger.log("ping: "+(pongResponseTime-pingSendTime), this);
 				}
+			}else{
+				Logger.error("Wrong data format "+data.toString(), this);
 			}
 			while (!objectsToSendList.isEmpty()){
 				sendToServer(objectsToSendList.get(0));
