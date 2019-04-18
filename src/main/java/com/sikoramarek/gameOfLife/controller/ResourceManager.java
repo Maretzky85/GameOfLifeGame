@@ -1,11 +1,13 @@
 package com.sikoramarek.gameOfLife.controller;
 
+import com.sikoramarek.gameOfLife.common.GameConfig;
 import com.sikoramarek.gameOfLife.common.Logger;
 import com.sikoramarek.gameOfLife.model.Model;
 import com.sikoramarek.gameOfLife.model.ModelSingleThread;
 import com.sikoramarek.gameOfLife.view.JavaFXView;
 import com.sikoramarek.gameOfLife.view.WindowedMenu;
 import javafx.application.Platform;
+import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class ResourceManager {
@@ -106,5 +108,13 @@ public class ResourceManager {
 	public JavaFXView getNewView() {
 		view = new JavaFXView();
 		return view;
+	}
+
+	public GameConfig getConfig() {
+		return getMenu().getConfig();
+	}
+
+	public Scene getMenuScene() {
+		return getMenu().getMenuScene();
 	}
 }

@@ -77,12 +77,18 @@ public class WindowedMenu {
 			config = new GameConfig(Integer.valueOf(boardXsize.getText()),Integer.valueOf(boardYsize.getText()), Integer.valueOf(fps.getText()));
 			action = MenuAction.START;
 			Logger.log("start", this);
+			synchronized (this){
+				notifyAll();
+			}
 		});
 
 		Button connectButton = new Button("Connect");
 		connectButton.setOnAction(event -> {
 			action = MenuAction.CONNECT;
 			Logger.log("request connection", this);
+			synchronized (this){
+				notifyAll();
+			}
 		});
 
 		GridPane.setConstraints(startButton, 0, 0);
@@ -106,6 +112,16 @@ public class WindowedMenu {
 	}
 
 	public synchronized MenuAction getAction() {
+		if (action == null){
+			synchronized (this){
+				try {
+					wait();
+				} catch (InterruptedException e) {
+					Logger.error(e, this);
+				}
+			}
+		}
+
 		MenuAction currentAction = action;
 		action = null;
 		return currentAction;

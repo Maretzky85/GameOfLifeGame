@@ -11,7 +11,6 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -38,6 +37,7 @@ public class Controller implements Runnable{
 	private Integer generation = -1;
 	private long responseTime;
 	private boolean update;
+	private boolean loadingStage;
 
 	public Controller(Stage stage){
 		primaryStage = stage;
@@ -54,36 +54,54 @@ public class Controller implements Runnable{
 			switch (gameState) {
 				case INIT:
 					//TODO load required assets and switch to menu
-					resourceManager = ResourceManager.getInstance();
+					if(resourceManager == null){
+						resourceManager = ResourceManager.getInstance();
+					}
+					if (primaryStage != null && primaryStage.isShowing()){
+						primaryStage.close();
+					}
+					if (modelStage != null && modelStage.isShowing()){
+						modelStage.close();
+					}
 					gameState = GameState.MENU;
 					break;
 				case LOADING:
 					//TODO load all needed to play assets
 					Logger.log("Loading", this);
-					if (config == null){
-						config = resourceManager.getMenu().getConfig();
+					if(resourceManager == null){
+						resourceManager = ResourceManager.getInstance();
 					}
+					if (modelStage != null && modelStage.isShowing()){
+						modelStage.close();
+					}
+					if (timing != null){
+						timing = resourceManager.getTimingControl();
+					}
+					config = resourceManager.getConfig();
 					model = resourceManager.getNewBoard(config.xSize,config.ySize);
 					model.changeOnPositions(positions);
 					view = resourceManager.getNewView();
-					if (client != null){
+					if (multiplayer){
 						view.setMulti(true);
 					}
 					view.viewInit(config.xSize, config.ySize);
 					timing = resourceManager.getTimingControl();
 					timing.setFRAME_RATE(config.fps);
+					loadingStage = true;
 					Platform.runLater(()->{
 
 						modelStage = new Stage();
-						modelStage.initStyle(StageStyle.UTILITY);
+						modelStage.initStyle(StageStyle.DECORATED);
 						modelStage.setScene(view.getScene());
 						modelStage.show();
+						modelStage.setMaximized(true);
+						loadingStage = false;
 
 					});
-					while(modelStage == null || !modelStage.isShowing()){
+					while(loadingStage || !modelStage.isShowing()){
 						synchronized (this){
 							try {
-								wait(5);
+								wait(10);
 							} catch (InterruptedException e) {
 								Logger.error(e, this);
 							}
@@ -98,12 +116,23 @@ public class Controller implements Runnable{
 
 					break;
 				case MENU:
+					if (timing != null){
+						timing.stop();
+					}
+					if (primaryStage == null){
+						Platform.exit();
+					}
+					if (modelStage != null){
+						Platform.runLater(() -> modelStage.close());
+					}
+					loadingStage = true;
 					if (!primaryStage.isShowing()){
 						Platform.runLater(() -> {
-							primaryStage.setScene(resourceManager.getMenu().getMenuScene());
+							primaryStage.setScene(resourceManager.getMenuScene());
 							primaryStage.show();
+							loadingStage = false;
 						});
-						while(!primaryStage.isShowing()){
+						while(loadingStage){
 							synchronized (this){
 								try {
 									wait(5);
@@ -113,17 +142,10 @@ public class Controller implements Runnable{
 							}
 						}
 					}
+					Logger.log("waiting for action from menu", this);
 					MenuAction action = resourceManager.getMenu().getAction();
 					if (action != null){
 						handleMenuAction(action);
-					}else {
-						try {
-							synchronized (this){
-								wait(10);
-							}
-						} catch (InterruptedException e) {
-							Logger.error(e, this);
-						}
 					}
 					break;
 				case PAUSED:
@@ -137,8 +159,8 @@ public class Controller implements Runnable{
 					}
 					break;
 				case RUNNING:
-					checkInput();
 					if (modelStage.isShowing()){
+						checkInput();
 						if(timing.getUpdate()){
 							view.refresh(model.nextGenerationBoard());
 						}
@@ -151,31 +173,21 @@ public class Controller implements Runnable{
 						Logger.log("NewClient", this);
 						client = Client.getClient();
 					}
-					if (!client.isConnecting()){
-						Logger.log("Trying to connect", this);
-						client.connect();
-					}
-					while (client.isConnecting()){
-						synchronized (this){
-							try {
-								wait(50);
-							} catch (InterruptedException e) {
-								Logger.error(e, this);
-							}
-						}
-					}
-					client.checkPing();
+					client.connect();
 					if (client.isConnected()){
+						client.checkPing();
 						gameState = GameState.MULTIPLAYER_CONFIG;
+					}else {
+						gameState = GameState.MENU;
 					}
+					break;
 				case MULTIPLAYER_CONFIG:
 					if(!client.isConnected()){
 						gameState = GameState.MULTIPLAYER_CONNECTING;
 					}else {
 						multiplayer = true;
-						if (negotiateConfig()){
-							gameState = GameState.LOADING;
-						}
+						negotiateConfig();
+						gameState = GameState.LOADING;
 						synchronized (this){
 							try {
 								wait(20);
@@ -192,7 +204,7 @@ public class Controller implements Runnable{
 						sendGetBoard();
 						responseTime = System.currentTimeMillis();
 					}
-					if (modelStage.isShowing()){
+					if (modelStage.isShowing() && client.isConnected()){
 						if(update){
 //							if (generation >= model.getCurrentGeneration()){
 								model.nextGenerationBoard();
@@ -203,6 +215,10 @@ public class Controller implements Runnable{
 						}else{
 							update = timing.getUpdate();
 						}
+					}else
+					{
+						gameState = GameState.MENU;
+						client.disconnect();
 					}
 					break;
 			}
@@ -228,50 +244,33 @@ public class Controller implements Runnable{
 		client.send(iteration);
 	}
 
-	private boolean negotiateConfig() {
-		GameConfig configToSend = resourceManager.getMenu().getConfig();
-		if (configToSend == this.config){
-			return true;
-		}
-		LinkedList received = client.getReceivedList();
+	private void negotiateConfig() {
+		HashMap request = new HashMap();
+		request.put(Request.class, Request.GET);
+		request.put(MessageType.class, MessageType.CONFIG);
+		Logger.log("Request arena config", this);
+		client.send(request);
+
+		LinkedList received = client.getResponse();
 		if (!received.isEmpty()){
-			Object response = received.pop();
-			if (response instanceof HashMap){
-				HashMap data = (HashMap) response;
-				if (data.get(Request.class) == Request.GET){
-					if (data.get(MessageType.class) == MessageType.CONFIG){
-						if (data.get(Response.class) == Response.ACCEPTED){
-							this.config = configToSend;
-							Logger.log("Config Accepted", this);
-							return true;
-						}else {
-							HashMap request = new HashMap();
-							request.put(Request.class, Request.GET);
-							request.put(MessageType.class, MessageType.CONFIG);
-							client.send(request);
-							Logger.log("Request arena config", this);
-						}
-					}
-				}else
-				if (data.get(Request.class) == Request.PUT){
-					if (data.get(MessageType.class) ==  MessageType.CONFIG){
+			for (Object object : received){
+				if (object instanceof HashMap){
+					HashMap data = (HashMap) object;
+					if (data.get(MessageType.CONFIG) != null){
 						this.config = (GameConfig) data.get(MessageType.CONFIG);
-						Logger.log("Config Loaded", this);
-						return true;
+					}else {
+						GameConfig configToSend = resourceManager.getMenu().getConfig();
+						HashMap config = new HashMap();
+						config.put(Request.class, Request.PUT);
+						config.put(MessageType.class, MessageType.CONFIG);
+						config.put(MessageType.CONFIG, configToSend);
+						client.send(config);
+						Logger.log("Config sent...", this);
 					}
 				}
-			}else{
-				Logger.error("Communication error", this);
 			}
 		}
 
-		HashMap config = new HashMap();
-		config.put(Request.class, Request.PUT);
-		config.put(MessageType.class, MessageType.CONFIG);
-		config.put(MessageType.CONFIG, configToSend);
-		client.send(config);
-		Logger.log("Sent Config", this);
-		return false;
 	}
 
 	private void handleServerResponse() {

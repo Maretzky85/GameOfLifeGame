@@ -86,6 +86,11 @@ public class FrameControlLoop implements TimingInterface{
 		return false;
 	}
 
+	@Override
+	public void stop() {
+		isRunning = false;
+	}
+
 	/**
 	 * function for stopping FrameControlLoop
 	 */

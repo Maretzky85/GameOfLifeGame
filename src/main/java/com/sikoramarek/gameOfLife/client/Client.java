@@ -21,15 +21,16 @@ public class Client implements Runnable, Connection{
 	private ObjectOutputStream outputStream;
 
 	private boolean connected = false;
-	private boolean connecting =false;
+	private boolean connecting = false;
 
 	private LinkedList<HashMap> receivedList;
 	private Vector<HashMap> objectsToSendList;
 
 	private long pingSendTime;
 
-	String host = "192.168.8.144";
-//	String host = "217.182.73.80";
+	String host = "localhost";
+//  String host = "192.168.8.144";
+//  String host = "217.182.73.80";
 
 	private Client(){
 		Logger.log("Client created", this);
@@ -44,11 +45,12 @@ public class Client implements Runnable, Connection{
 
 	@Override
 	public void connect(){
+		if (!connecting && !connected){
+			new Thread(this).start();
+		}
 		connecting = true;
 		if (connected){
 			Logger.error("Already connected", this);
-		}else{
-			new Thread(this).start();
 		}
 	}
 
@@ -70,6 +72,7 @@ public class Client implements Runnable, Connection{
 			outputStream.flush();
 		} catch (IOException e) {
 			Logger.error(e.getMessage(), this);
+			disconnect();
 		}
 	}
 
@@ -80,14 +83,16 @@ public class Client implements Runnable, Connection{
 
 	@Override
 	public void disconnect(){
+		Logger.log("Closing port", this);
+		connecting = false;
+		connected = false;
 		if(serviceSocket != null){
 			try {
-				inputStream.close();
-				outputStream.close();
 				serviceSocket.close();
 			} catch (IOException e) {
-				e.printStackTrace();
+				Logger.error(e, this);
 			}
+			Logger.log("Client exit", this);
 		}
 	}
 
@@ -95,7 +100,7 @@ public class Client implements Runnable, Connection{
 		if (connecting){
 			synchronized (this){
 				try {
-					Logger.log("waiting", this);
+					Logger.log("waiting for connection", this);
 					wait();
 				} catch (InterruptedException e) {
 					Logger.error(e, this);
@@ -136,17 +141,17 @@ public class Client implements Runnable, Connection{
 	}
 
 	@Override
-	public String toString(){
-		return "Client";
-	}
-
-	@Override
 	public void run() {
 		createConnection();
 		while(connected){
 			handleCommunication();
 		}
 		disconnect();
+		try {
+			Thread.currentThread().join();
+		} catch (InterruptedException e) {
+			Logger.error(e, this);
+		}
 	}
 
 	private void handleCommunication() {
@@ -155,6 +160,9 @@ public class Client implements Runnable, Connection{
 				Object data = inputStream.readObject();
 				if (data instanceof HashMap){
 					receivedList.add((HashMap) data);
+					synchronized (this){
+						notifyAll();
+					}
 					if (((HashMap) data).containsValue(MessageType.PONG)){
 						long pongResponseTime = System.currentTimeMillis();
 						Logger.log("ping: "+(pongResponseTime-pingSendTime), this);
@@ -168,15 +176,10 @@ public class Client implements Runnable, Connection{
 				objectsToSendList.remove(0);
 			}
 		} catch (IOException | ClassNotFoundException e) {
-			e.printStackTrace();
+			Logger.error(e, this);
 			disconnect();
-			Platform.exit();
 		}
 
-	}
-
-	public boolean isConnecting() {
-		return connecting;
 	}
 
 	public void checkPing() {
@@ -186,5 +189,23 @@ public class Client implements Runnable, Connection{
 		send(data);
 		pingSendTime = System.currentTimeMillis();
 	}
-}
 
+	@Override
+	public String toString(){
+		return "Client";
+	}
+
+	public LinkedList getResponse() {
+		if (receivedList.isEmpty()){
+			synchronized (this){
+				try {
+					wait();
+					Logger.log("waiting", this);
+				} catch (InterruptedException e) {
+					Logger.error(e, this);
+				}
+			}
+		}
+		return receivedList;
+	}
+}
