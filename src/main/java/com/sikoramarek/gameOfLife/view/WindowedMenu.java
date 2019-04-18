@@ -128,9 +128,7 @@ public class WindowedMenu {
 	}
 
 	public GameConfig getConfig(){
-		if (config == null){
-			config = new GameConfig(Integer.valueOf(boardXsize.getText()),Integer.valueOf(boardYsize.getText()), Integer.valueOf(fps.getText()));
-		}
+		config = new GameConfig(Integer.valueOf(boardXsize.getText()),Integer.valueOf(boardYsize.getText()), Integer.valueOf(fps.getText()));
 		return config;
 	}
 }

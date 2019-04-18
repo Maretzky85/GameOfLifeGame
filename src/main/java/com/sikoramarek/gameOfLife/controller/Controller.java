@@ -82,7 +82,7 @@ public class Controller implements Runnable{
 					if (!multiplayer){
 						config = resourceManager.getConfig();
 					}
-
+					secondPlayerBoard = null;
 					model = resourceManager.getNewBoard(config.xSize,config.ySize);
 					model.changeOnPositions(positions);
 					view = resourceManager.getNewView();
@@ -223,6 +223,7 @@ public class Controller implements Runnable{
 					}else
 					{
 						gameState = GameState.MENU;
+						multiplayer = false;
 						client.disconnect();
 					}
 					break;
@@ -268,12 +269,15 @@ public class Controller implements Runnable{
 			Logger.log("Received Config", this);
 		}else{
 			Logger.log("Arena ready to set", this);
-			config = resourceManager.getConfig();
+			this.config = resourceManager.getConfig();
 			HashMap config = new HashMap();
 			config.put(Request.class, Request.PUT);
 			config.put(MessageType.class, MessageType.CONFIG);
 			config.put(MessageType.CONFIG, this.config);
 			client.send(config);
+			System.out.println(this.config.xSize);
+			System.out.println(this.config.ySize);
+			System.out.println(this.config.fps);
 			Logger.log("Config sent...", this);
 		}
 	}
