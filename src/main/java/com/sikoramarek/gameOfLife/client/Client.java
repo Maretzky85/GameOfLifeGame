@@ -159,13 +159,14 @@ public class Client implements Runnable, Connection{
 			while (bufferedInputStream.available() > 0){
 				Object data = inputStream.readObject();
 				if (data instanceof HashMap){
-					receivedList.add((HashMap) data);
-					synchronized (this){
-						notifyAll();
-					}
 					if (((HashMap) data).containsValue(MessageType.PONG)){
 						long pongResponseTime = System.currentTimeMillis();
 						Logger.log("ping: "+(pongResponseTime-pingSendTime), this);
+					}else{
+						receivedList.add((HashMap) data);
+						synchronized (this){
+							notifyAll();
+						}
 					}
 				}else{
 					Logger.error("Wrong data format "+data.toString(), this);
@@ -195,17 +196,17 @@ public class Client implements Runnable, Connection{
 		return "Client";
 	}
 
-	public LinkedList getResponse() {
+	public synchronized HashMap getResponse() {
 		if (receivedList.isEmpty()){
 			synchronized (this){
 				try {
-					wait();
 					Logger.log("waiting", this);
+					wait();
 				} catch (InterruptedException e) {
 					Logger.error(e, this);
 				}
 			}
 		}
-		return receivedList;
+		return receivedList.pop();
 	}
 }

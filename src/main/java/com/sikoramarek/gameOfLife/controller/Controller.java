@@ -75,9 +75,14 @@ public class Controller implements Runnable{
 						modelStage.close();
 					}
 					if (timing != null){
+						timing.stop();
+					}else{
 						timing = resourceManager.getTimingControl();
 					}
-					config = resourceManager.getConfig();
+					if (!multiplayer){
+						config = resourceManager.getConfig();
+					}
+
 					model = resourceManager.getNewBoard(config.xSize,config.ySize);
 					model.changeOnPositions(positions);
 					view = resourceManager.getNewView();
@@ -251,26 +256,26 @@ public class Controller implements Runnable{
 		Logger.log("Request arena config", this);
 		client.send(request);
 
-		LinkedList received = client.getResponse();
-		if (!received.isEmpty()){
-			for (Object object : received){
-				if (object instanceof HashMap){
-					HashMap data = (HashMap) object;
-					if (data.get(MessageType.CONFIG) != null){
-						this.config = (GameConfig) data.get(MessageType.CONFIG);
-					}else {
-						GameConfig configToSend = resourceManager.getMenu().getConfig();
-						HashMap config = new HashMap();
-						config.put(Request.class, Request.PUT);
-						config.put(MessageType.class, MessageType.CONFIG);
-						config.put(MessageType.CONFIG, configToSend);
-						client.send(config);
-						Logger.log("Config sent...", this);
-					}
-				}
-			}
+		HashMap received = client.getResponse();
+		while(!received.containsKey(MessageType.CONFIG)){
+			System.out.println(received);
+			received = client.getResponse();
 		}
+		System.out.println(received.get(MessageType.CONFIG));
 
+		if (received.get(MessageType.CONFIG) != null){
+			config = (GameConfig) received.get(MessageType.CONFIG);
+			Logger.log("Received Config", this);
+			System.out.println(config.fps);
+		}else {
+			config = resourceManager.getConfig();
+			HashMap config = new HashMap();
+			config.put(Request.class, Request.PUT);
+			config.put(MessageType.class, MessageType.CONFIG);
+			config.put(MessageType.CONFIG, this.config);
+			client.send(config);
+			Logger.log("Config sent...", this);
+		}
 	}
 
 	private void handleServerResponse() {
