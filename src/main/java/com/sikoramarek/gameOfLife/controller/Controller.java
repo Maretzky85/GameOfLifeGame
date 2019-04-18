@@ -349,7 +349,6 @@ public class Controller implements Runnable{
 
 		}else if ((data.get(MessageType.class) == MessageType.POSITION)){
 			Integer[] position = (Integer[]) data.get(MessageType.POSITION);
-			System.out.println("position");
 			model.changeOnPosition(position[0], position[1]);
 		}
 		else{
@@ -360,13 +359,12 @@ public class Controller implements Runnable{
 	private void checkInput() {
 		if(!SharedResources.positions.isEmpty()){
 			for (int[] position: SharedResources.positions){
-				System.out.println(position[0]);
 				if (position[0] > model.getCurrentBoard()[0].length){
 					HashMap data = new HashMap();
 					data.put(Request.class, Request.PUT);
 					data.put(MessageType.class, MessageType.POSITION);
 					Integer[] positionToSend = new Integer[]{position[0]-model.getCurrentBoard()[0].length, position[1]};
-					data.put(MessageType.POSITION, (Integer[]) positionToSend);
+					data.put(MessageType.POSITION, positionToSend);
 					client.send(data);
 				}
 			}
