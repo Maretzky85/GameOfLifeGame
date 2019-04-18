@@ -263,11 +263,11 @@ public class Controller implements Runnable{
 		}
 		System.out.println(received.get(MessageType.CONFIG));
 
-		if (received.get(MessageType.CONFIG) != null){
+		if (received.get(MessageType.CONFIG) != null) {
 			config = (GameConfig) received.get(MessageType.CONFIG);
 			Logger.log("Received Config", this);
-			System.out.println(config.fps);
-		}else {
+		}else{
+			Logger.log("Arena ready to set", this);
 			config = resourceManager.getConfig();
 			HashMap config = new HashMap();
 			config.put(Request.class, Request.PUT);
